@@ -9,6 +9,8 @@ import {
 import MusicList from "./Components/musicList.jsx";
 // @ts-expect-error JavaScript component without a declaration file.
 import Home from "./Components/home.jsx";
+// @ts-expect-error JavaScript component without a declaration file.
+import Favorites from "./favorite.jsx";
 
 const API_KEY =
   import.meta.env.VITE_YOUTUBE_API_KEY;
@@ -57,6 +59,9 @@ type VideoDetails = {
 
 const DEFAULT_QUERY =
   "popular songs 2026";
+
+const FAVORITES_STORAGE_KEY =
+  "music-fun-favorite-song-ids";
 
 // WORDS THAT SHOULD NOT APPEAR IN MUSIC RESULTS
 // =====================================================
@@ -562,6 +567,39 @@ function App() {
     useState<number | null>(null);
 
 
+  const [favoriteSongs, setFavoriteSongs] =
+    useState<Song[]>(() => {
+      try {
+        const saved =
+          localStorage.getItem(
+            FAVORITES_STORAGE_KEY
+          );
+
+        const parsed =
+          saved ? JSON.parse(saved) : [];
+
+        return Array.isArray(parsed)
+          ? parsed.filter(
+              (song) =>
+                song &&
+                typeof song === "object" &&
+                typeof song.youtubeVideoId === "string"
+            )
+          : [];
+      } catch {
+        return [];
+      }
+    });
+
+
+  const [showFavorites, setShowFavorites] =
+    useState(false);
+
+
+  const [favoriteActiveIndex, setFavoriteActiveIndex] =
+    useState<number | null>(null);
+
+
   const [loading, setLoading] =
     useState(true);
 
@@ -597,6 +635,41 @@ function App() {
 
   const nextPlayedIds =
     useRef<Set<string>>(new Set());
+
+
+  const favoriteIds =
+    favoriteSongs.map(
+      (song) => song.youtubeVideoId
+    );
+
+
+  useEffect(() => {
+    localStorage.setItem(
+      FAVORITES_STORAGE_KEY,
+      JSON.stringify(favoriteSongs)
+    );
+  }, [favoriteSongs]);
+
+
+  const toggleFavorite =
+    useCallback(
+      (song: Song) => {
+        setFavoriteSongs((previousSongs) =>
+          previousSongs.some(
+            (favoriteSong) =>
+              favoriteSong.youtubeVideoId ===
+              song.youtubeVideoId
+          )
+            ? previousSongs.filter(
+                (favoriteSong) =>
+                  favoriteSong.youtubeVideoId !==
+                  song.youtubeVideoId
+              )
+            : [...previousSongs, song]
+        );
+      },
+      []
+    );
 
 
   // ===================================================
@@ -1016,6 +1089,57 @@ function App() {
     );
 
 
+  const handleFavoritePlay =
+    useCallback(
+      (index: number) => {
+        if (
+          index < 0 ||
+          index >= favoriteSongs.length
+        ) {
+          return;
+        }
+
+        setFavoriteActiveIndex(index);
+      },
+      [favoriteSongs.length]
+    );
+
+
+  const handleFavoriteNext =
+    useCallback(
+      () => {
+        if (favoriteSongs.length === 0) {
+          return;
+        }
+
+        setFavoriteActiveIndex((previousIndex) =>
+          previousIndex === null ||
+          previousIndex >= favoriteSongs.length - 1
+            ? 0
+            : previousIndex + 1
+        );
+      },
+      [favoriteSongs.length]
+    );
+
+
+  const handleFavoritePrevious =
+    useCallback(
+      () => {
+        if (favoriteSongs.length === 0) {
+          return;
+        }
+
+        setFavoriteActiveIndex((previousIndex) =>
+          previousIndex === null || previousIndex === 0
+            ? favoriteSongs.length - 1
+            : previousIndex - 1
+        );
+      },
+      [favoriteSongs.length]
+    );
+
+
   // ===================================================
   // SLEEP TIMER
   // ===================================================
@@ -1106,6 +1230,25 @@ function App() {
       .padStart(2, "0")}`;
 
 
+  if (showFavorites) {
+    return (
+      <Favorites
+        songs={favoriteSongs}
+        activeIndex={favoriteActiveIndex}
+        onPlay={handleFavoritePlay}
+        onNext={handleFavoriteNext}
+        onPrevious={handleFavoritePrevious}
+        favoriteIds={favoriteIds}
+        onToggleFavorite={toggleFavorite}
+        onBack={() => {
+          setFavoriteActiveIndex(null);
+          setShowFavorites(false);
+        }}
+      />
+    );
+  }
+
+
   // ===================================================
   // RENDER
   // ===================================================
@@ -1162,6 +1305,16 @@ function App() {
         formattedSleepTime
       }
 
+      favoriteCount={
+        favoriteIds.length
+      }
+
+      onShowFavorites={() => {
+        setActiveIndex(null);
+        setAutoPlayIndex(null);
+        setShowFavorites(true);
+      }}
+
     >
 
       {!loading &&
@@ -1191,6 +1344,14 @@ function App() {
 
             onPrevious={
               handlePrevious
+            }
+
+            favoriteIds={
+              favoriteIds
+            }
+
+            onToggleFavorite={
+              toggleFavorite
             }
 
           />

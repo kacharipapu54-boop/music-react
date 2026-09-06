@@ -192,6 +192,8 @@ function Music_card({
   onPlay,
   onNext,
   onPrevious,
+  isFavorite = false,
+  onToggleFavorite,
 }) {
 
   const cardRef =
@@ -559,6 +561,23 @@ function Music_card({
         >
           {song.artistName}
         </p>
+
+        <button
+          className={`favorite-button ${isFavorite ? "is-favorite" : ""}`}
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleFavorite?.();
+          }}
+          aria-label={
+            isFavorite
+              ? `Remove ${song.trackName} from favorites`
+              : `Add ${song.trackName} to favorites`
+          }
+          aria-pressed={isFavorite}
+        >
+          {isFavorite ? "♥" : "♡"}
+        </button>
 
       </div>
 

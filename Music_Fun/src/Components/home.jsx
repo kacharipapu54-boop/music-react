@@ -16,6 +16,8 @@ function Home({
   setSleepMinutes,
   sleepRemaining,
   formattedSleepTime,
+  favoriteCount = 0,
+  onShowFavorites,
 }) {
 
   return (
@@ -34,7 +36,7 @@ function Home({
           </p>
 
           <h1>
-            Music,
+            Listen,
             <br />
             your way.
           </h1>
@@ -47,6 +49,16 @@ function Home({
           <p className="ad-free-message">
             Here you can listen to ad-free songs.
           </p>
+
+          <button
+            className="favorites-heart-button"
+            type="button"
+            onClick={onShowFavorites}
+            aria-label={`Open favorites, ${favoriteCount} songs saved`}
+          >
+            <span aria-hidden="true">♥</span>
+            <strong>{favoriteCount}</strong>
+          </button>
 
           <a
             className="instagram-link"

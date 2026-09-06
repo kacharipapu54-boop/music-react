@@ -8,6 +8,8 @@ function MusicList({
   onPlay,
   onNext,
   onPrevious,
+  favoriteIds = [],
+  onToggleFavorite,
 }) {
 
   if (
@@ -70,6 +72,16 @@ function MusicList({
 
             onPrevious={
               onPrevious
+            }
+
+            isFavorite={
+              favoriteIds.includes(
+                song.youtubeVideoId
+              )
+            }
+
+            onToggleFavorite={() =>
+              onToggleFavorite?.(song)
             }
 
           />
