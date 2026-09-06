@@ -154,15 +154,30 @@ function removeDuplicates(
   );
 }
 
-function sameText(
+function normalizeArtistName(
+  value?: string
+) {
+  return (value || "")
+    .toLowerCase()
+    .replace(/official|vevo|music|records|record label|topic/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function sameArtist(
   left?: string,
   right?: string
 ) {
+  const normalizedLeft =
+    normalizeArtistName(left);
+  const normalizedRight =
+    normalizeArtistName(right);
+
   return Boolean(
-    left &&
-    right &&
-    left.trim().toLowerCase() ===
-      right.trim().toLowerCase()
+    normalizedLeft &&
+    normalizedRight &&
+    (normalizedLeft === normalizedRight ||
+      normalizedLeft.includes(normalizedRight) ||
+      normalizedRight.includes(normalizedLeft))
   );
 }
 
@@ -179,7 +194,7 @@ function findRelatedSong(
   );
 
   return candidates.find((song) =>
-    sameText(song.artistName, currentSong.artistName)
+    sameArtist(song.artistName, currentSong.artistName)
   );
 }
 
@@ -850,8 +865,7 @@ function App() {
 
           return results.filter(
             (item) =>
-              item.youtubeVideoId !== song.youtubeVideoId &&
-              sameText(item.artistName, song.artistName)
+              item.youtubeVideoId !== song.youtubeVideoId
           );
 
         } catch (caught) {
@@ -913,11 +927,27 @@ function App() {
           const existingIds = new Set(
             songs.map((song) => song.youtubeVideoId)
           );
-          const newSongs = removeDuplicates(similar).filter(
-            (song) =>
-              !existingIds.has(song.youtubeVideoId) &&
-              !nextPlayedIds.current.has(song.youtubeVideoId)
-          );
+          const newSongs = removeDuplicates(similar)
+            .filter(
+              (song) =>
+                !existingIds.has(song.youtubeVideoId) &&
+                !nextPlayedIds.current.has(song.youtubeVideoId)
+            )
+            .sort(
+              (left, right) =>
+                Number(
+                  sameArtist(
+                    right.artistName,
+                    currentSong.artistName
+                  )
+                ) -
+                Number(
+                  sameArtist(
+                    left.artistName,
+                    currentSong.artistName
+                  )
+                )
+            );
 
           if (newSongs.length === 0) {
             nextPlayedIds.current.clear();
