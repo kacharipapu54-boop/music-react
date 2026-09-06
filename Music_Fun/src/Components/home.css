@@ -13,6 +13,18 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  min-width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #0d0d12;
+}
+
 .home-page {
   min-height: 100vh;
   overflow: hidden;
@@ -423,6 +435,30 @@ input::-webkit-search-cancel-button {
   cursor: not-allowed;
 
   opacity: 0.45;
+}
+
+.search-back-button {
+  display: block;
+  margin: 30px auto 0;
+  padding: 11px 18px;
+  border: 1px solid rgba(255, 159, 190, 0.45);
+  border-radius: 10px;
+  color: #fffaf7;
+  background: rgba(255, 61, 129, 0.14);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.search-back-button:hover {
+  background: rgba(255, 61, 129, 0.3);
+  transform: translateY(-2px);
+}
+
+.search-back-button:focus-visible {
+  outline: 2px solid var(--pink-soft);
+  outline-offset: 3px;
 }
 
 /* =========================================

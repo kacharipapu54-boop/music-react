@@ -60,6 +60,13 @@ type VideoDetails = {
 const DEFAULT_QUERY =
   "popular songs 2026";
 
+const RECOMMENDATION_QUERIES = [
+  "popular songs 2026",
+  "new hit songs 2026",
+  "trending music 2026",
+  "top songs 2026",
+];
+
 const FAVORITES_STORAGE_KEY =
   "music-fun-favorite-song-ids";
 
@@ -636,6 +643,9 @@ function App() {
   const nextPlayedIds =
     useRef<Set<string>>(new Set());
 
+  const recommendationQueryIndex =
+    useRef(0);
+
 
   const favoriteIds =
     favoriteSongs.map(
@@ -873,9 +883,18 @@ function App() {
 
         try {
 
+          recommendationQueryIndex.current =
+            (recommendationQueryIndex.current + 1) %
+            RECOMMENDATION_QUERIES.length;
+
+          const recommendationQuery =
+            RECOMMENDATION_QUERIES[
+              recommendationQueryIndex.current
+            ];
+
           const results =
             await searchYouTube(
-              DEFAULT_QUERY,
+              recommendationQuery,
                 50
             );
 
@@ -1263,8 +1282,9 @@ function App() {
   // ===================================================
 
   return (
-
-    <Home
+    <>
+      <div className={showFavorites ? "view-hidden" : ""}>
+        <Home
 
       loading={
         loading || loadingMore
@@ -1322,12 +1342,11 @@ function App() {
         setShowFavorites(true);
       }}
 
-    >
+        >
 
-      {!error && (
-        <div className={showFavorites ? "view-hidden" : ""}>
+          {!error && (
 
-          <MusicList
+            <MusicList
 
             songs={
               songs
@@ -1361,10 +1380,12 @@ function App() {
               toggleFavorite
             }
 
-          />
+            />
 
-        </div>
-      )}
+          )}
+
+        </Home>
+      </div>
 
       <div className={showFavorites ? "" : "view-hidden"}>
         <Favorites
@@ -1381,12 +1402,11 @@ function App() {
           onToggleFavorite={toggleFavorite}
           onBack={() => {
             setShowFavorites(false);
+            void clearSearch();
           }}
         />
       </div>
-
-
-    </Home>
+    </>
   );
 }
 

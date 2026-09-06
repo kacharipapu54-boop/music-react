@@ -299,6 +299,16 @@ function Home({
 
         {!error && children}
 
+        {hasSearched && !loading && !error && (
+          <button
+            className="search-back-button"
+            type="button"
+            onClick={onClearSearch}
+          >
+            Back to recommendations
+          </button>
+        )}
+
       </section>
 
     </main>
