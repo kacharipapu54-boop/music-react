@@ -168,25 +168,18 @@ function sameText(
 
 function findRelatedSong(
   songs: Song[],
-  currentSong: Song
+  currentSong: Song,
+  excludedIds = new Set<string>()
 ) {
   const candidates = songs.filter(
     (song) =>
       song.youtubeVideoId !==
-      currentSong.youtubeVideoId
+        currentSong.youtubeVideoId &&
+      !excludedIds.has(song.youtubeVideoId)
   );
 
-  return (
-    candidates.find((song) =>
-      sameText(song.artistName, currentSong.artistName)
-    ) ??
-    candidates.find((song) =>
-      sameText(song.genre, currentSong.genre)
-    ) ??
-    candidates.find((song) =>
-      sameText(song.language, currentSong.language)
-    ) ??
-    null
+  return candidates.find((song) =>
+    sameText(song.artistName, currentSong.artistName)
   );
 }
 
@@ -587,6 +580,9 @@ function App() {
   const loadingNext =
     useRef(false);
 
+  const nextPlayedIds =
+    useRef<Set<string>>(new Set());
+
 
   // ===================================================
   // LOAD INITIAL SONGS
@@ -847,15 +843,15 @@ function App() {
 
           const results =
             await searchYouTube(
-              `${song.trackName} ${song.artistName} song`,
+              `${song.artistName} official songs`,
               25
             );
 
 
           return results.filter(
             (item) =>
-              item.youtubeVideoId !==
-              song.youtubeVideoId
+              item.youtubeVideoId !== song.youtubeVideoId &&
+              sameText(item.artistName, song.artistName)
           );
 
         } catch (caught) {
@@ -880,7 +876,6 @@ function App() {
   const handleNext =
     useCallback(
       async () => {
-
         if (
           activeIndex === null ||
           songs.length === 0 ||
@@ -889,154 +884,79 @@ function App() {
           return;
         }
 
-
-        const nextIndex =
-          activeIndex + 1;
-
-
-        // ---------------------------------------------
-        // We already have the next song
-        // ---------------------------------------------
-
-        if (
-          nextIndex < songs.length
-        ) {
-
-          const currentSong =
-            songs[activeIndex];
-
-          const relatedSong =
-            currentSong &&
-            findRelatedSong(
-              songs,
-              currentSong
-            );
-
-          const relatedIndex =
-            relatedSong
-              ? songs.indexOf(relatedSong)
-              : -1;
-
-          if (relatedIndex >= 0) {
-            setActiveIndex(relatedIndex);
-            setAutoPlayIndex(relatedIndex);
-            return;
-          }
-        }
-
-
-        // ---------------------------------------------
-        // End of queue
-        // ---------------------------------------------
-
-        const currentSong =
-          songs[activeIndex];
-
+        const currentSong = songs[activeIndex];
 
         if (!currentSong) {
           return;
         }
 
-        loadingNext.current =
-          true;
+        nextPlayedIds.current.add(currentSong.youtubeVideoId);
 
+        const relatedSong = findRelatedSong(
+          songs,
+          currentSong,
+          nextPlayedIds.current
+        );
 
+        if (relatedSong) {
+          const relatedIndex = songs.indexOf(relatedSong);
+          setActiveIndex(relatedIndex);
+          setAutoPlayIndex(relatedIndex);
+          return;
+        }
+
+        loadingNext.current = true;
         setLoadingMore(true);
 
-
         try {
+          const similar = await findSimilarSongs(currentSong);
+          const existingIds = new Set(
+            songs.map((song) => song.youtubeVideoId)
+          );
+          const newSongs = removeDuplicates(similar).filter(
+            (song) =>
+              !existingIds.has(song.youtubeVideoId) &&
+              !nextPlayedIds.current.has(song.youtubeVideoId)
+          );
 
-          const similar =
-            await findSimilarSongs(
-              currentSong
+          if (newSongs.length === 0) {
+            nextPlayedIds.current.clear();
+            nextPlayedIds.current.add(currentSong.youtubeVideoId);
+
+            const fallbackSong = findRelatedSong(
+              songs,
+              currentSong,
+              nextPlayedIds.current
             );
 
-
-          const existingIds =
-            new Set(
-              songs.map(
-                (song) =>
-                  song.youtubeVideoId
-              )
-            );
-
-
-          const newSongs =
-            removeDuplicates(
-              similar
-            ).filter(
-              (song) =>
-                !existingIds.has(
-                  song.youtubeVideoId
-                )
-            );
-
-
-          if (
-            newSongs.length === 0
-          ) {
-            const relatedSong =
-              findRelatedSong(
-                songs,
-                currentSong
-              );
-
-            const relatedIndex =
-              relatedSong
-                ? songs.indexOf(relatedSong)
-                : -1;
-
-            if (relatedIndex >= 0) {
-              setActiveIndex(relatedIndex);
-              setAutoPlayIndex(relatedIndex);
+            if (fallbackSong) {
+              const fallbackIndex = songs.indexOf(fallbackSong);
+              setActiveIndex(fallbackIndex);
+              setAutoPlayIndex(fallbackIndex);
               return;
             }
 
-            // Avoid replaying an unrelated adjacent track.
             setActiveIndex(0);
             setAutoPlayIndex(0);
-
             return;
           }
 
+          const firstNewIndex = songs.length;
 
-          const firstNewIndex =
-            songs.length;
-
-
-          setSongs(
-            (previousSongs) =>
-              removeDuplicates([
-                ...previousSongs,
-                ...newSongs,
-              ])
+          setSongs((previousSongs) =>
+            removeDuplicates([
+              ...previousSongs,
+              ...newSongs,
+            ])
           );
-
-
-          // Automatically start it
-          setActiveIndex(
-            firstNewIndex
-          );
-
-          setAutoPlayIndex(
-            firstNewIndex
-          );
-
-
+          setActiveIndex(firstNewIndex);
+          setAutoPlayIndex(firstNewIndex);
         } finally {
-
-          loadingNext.current =
-            false;
-
+          loadingNext.current = false;
           setLoadingMore(false);
         }
-
       },
-      [
-        activeIndex,
-        songs,
-        findSimilarSongs,
-      ]
+      [activeIndex, songs, findSimilarSongs]
     );
 
 
@@ -1047,7 +967,6 @@ function App() {
   const handlePrevious =
     useCallback(
       () => {
-
         if (
           activeIndex === null ||
           songs.length === 0
@@ -1055,26 +974,15 @@ function App() {
           return;
         }
 
-
         const previousIndex =
           activeIndex === 0
             ? songs.length - 1
             : activeIndex - 1;
 
-
-        setActiveIndex(
-          previousIndex
-        );
-
-        setAutoPlayIndex(
-          previousIndex
-        );
-
+        setActiveIndex(previousIndex);
+        setAutoPlayIndex(previousIndex);
       },
-      [
-        activeIndex,
-        songs.length,
-      ]
+      [activeIndex, songs.length]
     );
 
 
