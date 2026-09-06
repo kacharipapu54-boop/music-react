@@ -297,9 +297,7 @@ function Home({
             SONG LIST
         ===================================== */}
 
-        {!loading &&
-          !error &&
-          children}
+        {!error && children}
 
       </section>
 

@@ -784,9 +784,10 @@ function App() {
 
           setHasSearched(true);
 
-          setActiveIndex(null);
-
-          setAutoPlayIndex(null);
+          const currentSong =
+            activeIndex === null
+              ? null
+              : songs[activeIndex] || null;
 
 
           /*
@@ -802,11 +803,23 @@ function App() {
             );
 
 
-          setSongs(
-            removeDuplicates(
-              results
-            ).slice(0, 25)
-          );
+          const nextSongs = removeDuplicates(
+            currentSong
+              ? [currentSong, ...results]
+              : results
+          ).slice(0, 25);
+
+          setSongs(nextSongs);
+
+          if (currentSong) {
+            setActiveIndex(
+              nextSongs.findIndex(
+                (song) =>
+                  song.youtubeVideoId ===
+                  currentSong.youtubeVideoId
+              )
+            );
+          }
 
 
         } catch (caught) {
@@ -832,7 +845,7 @@ function App() {
         }
 
       },
-      [searchQuery]
+      [activeIndex, searchQuery, songs]
     );
 
 
@@ -848,9 +861,10 @@ function App() {
 
         setHasSearched(false);
 
-        setActiveIndex(null);
-
-        setAutoPlayIndex(null);
+        const currentSong =
+          activeIndex === null
+            ? null
+            : songs[activeIndex] || null;
 
         setError("");
 
@@ -866,11 +880,23 @@ function App() {
             );
 
 
-          setSongs(
-            removeDuplicates(
-              results
-            ).slice(0, 25)
-          );
+          const nextSongs = removeDuplicates(
+            currentSong
+              ? [currentSong, ...results]
+              : results
+          ).slice(0, 25);
+
+          setSongs(nextSongs);
+
+          if (currentSong) {
+            setActiveIndex(
+              nextSongs.findIndex(
+                (song) =>
+                  song.youtubeVideoId ===
+                  currentSong.youtubeVideoId
+              )
+            );
+          }
 
 
         } catch (caught) {
@@ -888,7 +914,7 @@ function App() {
         }
 
       },
-      []
+      [activeIndex, songs]
     );
 
 
@@ -911,6 +937,8 @@ function App() {
         setActiveIndex(index);
 
         setAutoPlayIndex(index);
+
+        setFavoriteActiveIndex(null);
 
       },
       [songs.length]
@@ -1230,25 +1258,6 @@ function App() {
       .padStart(2, "0")}`;
 
 
-  if (showFavorites) {
-    return (
-      <Favorites
-        songs={favoriteSongs}
-        activeIndex={favoriteActiveIndex}
-        onPlay={handleFavoritePlay}
-        onNext={handleFavoriteNext}
-        onPrevious={handleFavoritePrevious}
-        favoriteIds={favoriteIds}
-        onToggleFavorite={toggleFavorite}
-        onBack={() => {
-          setFavoriteActiveIndex(null);
-          setShowFavorites(false);
-        }}
-      />
-    );
-  }
-
-
   // ===================================================
   // RENDER
   // ===================================================
@@ -1310,15 +1319,13 @@ function App() {
       }
 
       onShowFavorites={() => {
-        setActiveIndex(null);
-        setAutoPlayIndex(null);
         setShowFavorites(true);
       }}
 
     >
 
-      {!loading &&
-        !error && (
+      {!error && (
+        <div className={showFavorites ? "view-hidden" : ""}>
 
           <MusicList
 
@@ -1356,7 +1363,28 @@ function App() {
 
           />
 
-        )}
+        </div>
+      )}
+
+      <div className={showFavorites ? "" : "view-hidden"}>
+        <Favorites
+          songs={favoriteSongs}
+          activeIndex={favoriteActiveIndex}
+          onPlay={(index: number) => {
+            setActiveIndex(null);
+            setAutoPlayIndex(null);
+            handleFavoritePlay(index);
+          }}
+          onNext={handleFavoriteNext}
+          onPrevious={handleFavoritePrevious}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
+          onBack={() => {
+            setShowFavorites(false);
+          }}
+        />
+      </div>
+
 
     </Home>
   );
