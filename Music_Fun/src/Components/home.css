@@ -439,7 +439,7 @@ input::-webkit-search-cancel-button {
 
 .search-back-button {
   display: block;
-  margin: 30px auto 0;
+  margin: 14px 0 0;
   padding: 11px 18px;
   border: 1px solid rgba(255, 159, 190, 0.45);
   border-radius: 10px;
