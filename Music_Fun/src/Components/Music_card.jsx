@@ -194,6 +194,9 @@ function Music_card({
   onPrevious,
 }) {
 
+  const cardRef =
+    useRef(null);
+
   const playerContainerRef =
     useRef(null);
 
@@ -222,6 +225,37 @@ function Music_card({
     nextRef.current =
       onNext;
   }, [onNext]);
+
+
+  // ===================================================
+  // Auto-scroll to active card
+  // ===================================================
+
+  useEffect(() => {
+
+    if (
+      !isActive ||
+      !cardRef.current
+    ) {
+      return;
+    }
+
+    // Small delay so the DOM has settled
+    // (e.g. new songs appended) before scrolling.
+    const timeout =
+      setTimeout(() => {
+
+        cardRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+
+      }, 300);
+
+    return () =>
+      clearTimeout(timeout);
+
+  }, [isActive]);
 
 
   // ===================================================
@@ -422,10 +456,11 @@ function Music_card({
 
   return (
     <article
+      ref={cardRef}
       className={
         `music-card ${
           isActive
-            ? "is-active"
+            ? "is-active scroll-highlight"
             : ""
         }`
       }

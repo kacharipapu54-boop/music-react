@@ -160,3 +160,32 @@
     font-size: 0.95rem;
   }
 }
+
+
+/* =====================================================
+   Auto-scroll highlight animation
+   Pulses when a new song starts playing automatically
+   ===================================================== */
+
+@keyframes scroll-glow {
+  0% {
+    box-shadow:
+      0 0 0 3px rgba(255, 61, 129, 0.1),
+      0 24px 55px rgba(0, 0, 0, 0.34);
+  }
+  40% {
+    box-shadow:
+      0 0 0 6px rgba(255, 61, 129, 0.35),
+      0 0 30px rgba(255, 61, 129, 0.18),
+      0 24px 55px rgba(0, 0, 0, 0.34);
+  }
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(255, 61, 129, 0.1),
+      0 24px 55px rgba(0, 0, 0, 0.34);
+  }
+}
+
+.music-card.scroll-highlight {
+  animation: scroll-glow 1.2s ease-out;
+}
