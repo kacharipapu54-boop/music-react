@@ -51,8 +51,9 @@ function Favorites({
               type="button"
               onClick={onToggleShuffle}
               aria-pressed={shuffleEnabled}
+              aria-label="Shuffle favorite songs"
             >
-              {shuffleEnabled ? "Shuffle: On" : "Shuffle"}
+              {shuffleEnabled ? "Shuffle favorites: On" : "Shuffle favorites"}
             </button>
 
             <button
