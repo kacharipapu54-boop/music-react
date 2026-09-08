@@ -194,7 +194,6 @@ function Music_card({
   onPrevious,
   isFavorite = false,
   onToggleFavorite,
-  backgroundPlayEnabled = true,
 }) {
 
   const cardRef =
@@ -223,162 +222,225 @@ function Music_card({
     );
 
 
+  // Always keep latest callback
   useEffect(() => {
     nextRef.current =
       onNext;
   }, [onNext]);
 
+
+  // ===================================================
+  // Auto-scroll to active card
+  // ===================================================
+
   useEffect(() => {
-    if (!isActive || !cardRef.current) {
+
+    if (
+      !isActive ||
+      !cardRef.current
+    ) {
       return;
     }
 
+    // Small delay so the DOM has settled
+    // (e.g. new songs appended) before scrolling.
     const timeout =
       setTimeout(() => {
+
         cardRef.current?.scrollIntoView({
           behavior: "smooth",
           block: "center",
         });
+
       }, 300);
 
-    return () => clearTimeout(timeout);
+    return () =>
+      clearTimeout(timeout);
+
   }, [isActive]);
 
-  useEffect(() => {
-    if (!isActive || !playerRef.current) {
-      return;
-    }
 
-    const handleVisibility = () => {
-      if (!playerRef.current) {
-        return;
-      }
-
-      if (document.hidden) {
-        if (backgroundPlayEnabled) {
-          try {
-            playerRef.current.mute();
-            playerRef.current.playVideo();
-          } catch {
-            // Ignore
-          }
-        } else {
-          try {
-            playerRef.current.pauseVideo();
-          } catch {
-            // Ignore
-          }
-        }
-      } else if (backgroundPlayEnabled) {
-        try {
-          playerRef.current.unMute?.();
-          playerRef.current.playVideo();
-        } catch {
-          // Ignore
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [backgroundPlayEnabled, isActive]);
+  // ===================================================
+  // Create player only for active card
+  // ===================================================
 
   useEffect(() => {
+
     let cancelled = false;
 
-    if (!isActive || !videoId || !playerContainerRef.current) {
+
+    if (
+      !isActive ||
+      !videoId ||
+      !playerContainerRef.current
+    ) {
       return;
     }
+
 
     setPlayerReady(false);
     setPlayerError("");
 
+
     loadYouTubeApi()
       .then((YT) => {
-        if (cancelled || !playerContainerRef.current) {
+
+        if (
+          cancelled ||
+          !playerContainerRef.current
+        ) {
           return;
         }
 
-        playerRef.current = new YT.Player(playerContainerRef.current, {
-          videoId,
-          playerVars: {
-            autoplay: 1,
-            controls: 1,
-            playsinline: 1,
-            rel: 0,
-            modestbranding: 1,
-            enablejsapi: 1,
-            mute: backgroundPlayEnabled ? 1 : 0,
-            origin: window.location.origin,
-          },
 
-          events: {
-            onReady: (event) => {
-              if (cancelled) {
-                return;
-              }
+        playerRef.current =
+          new YT.Player(
+            playerContainerRef.current,
+            {
 
-              setPlayerReady(true);
+              videoId,
 
-              if (backgroundPlayEnabled) {
-                event.target.mute();
-              }
+              playerVars: {
+                autoplay: 1,
+                controls: 1,
+                playsinline: 1,
+                rel: 0,
+                modestbranding: 1,
+                enablejsapi: 1,
+                origin:
+                  window.location.origin,
+              },
 
-              event.target.playVideo();
-            },
 
-            onStateChange: (event) => {
-              if (event.data === YT.PlayerState.ENDED) {
-                nextRef.current?.();
-              }
-            },
+              events: {
 
-            onAutoplayBlocked: () => {
-              setPlayerError("Tap the YouTube play button to start playback.");
-            },
+                // -------------------------------------
+                // Ready
+                // -------------------------------------
 
-            onError: (event) => {
-              console.error("YouTube error:", event.data);
+                onReady: (event) => {
 
-              const messages = {
-                2: "Invalid YouTube video.",
-                5: "YouTube HTML5 player error.",
-                100: "This video is unavailable.",
-                101: "This video cannot be embedded.",
-                150: "This video cannot be embedded.",
-                153: "YouTube could not identify this page.",
-              };
+                  if (cancelled) {
+                    return;
+                  }
 
-              setPlayerError(messages[event.data] || "This video could not be played.");
-            },
-          },
-        });
+                  setPlayerReady(true);
+
+                  // User clicked the cover,
+                  // so start immediately.
+                  event.target.playVideo();
+                },
+
+
+                // -------------------------------------
+                // State changes
+                // -------------------------------------
+
+                onStateChange: (event) => {
+
+                  if (
+                    event.data ===
+                    YT.PlayerState.ENDED
+                  ) {
+
+                    nextRef.current?.();
+                  }
+                },
+
+
+                // -------------------------------------
+                // Autoplay blocked
+                // -------------------------------------
+
+                onAutoplayBlocked: () => {
+
+                  setPlayerError(
+                    "Tap the YouTube play button to start playback."
+                  );
+                },
+
+
+                // -------------------------------------
+                // Errors
+                // -------------------------------------
+
+                onError: (event) => {
+
+                  console.error(
+                    "YouTube error:",
+                    event.data
+                  );
+
+
+                  const messages = {
+                    2: "Invalid YouTube video.",
+                    5: "YouTube HTML5 player error.",
+                    100: "This video is unavailable.",
+                    101: "This video cannot be embedded.",
+                    150: "This video cannot be embedded.",
+                    153: "YouTube could not identify this page.",
+                  };
+
+
+                  setPlayerError(
+                    messages[
+                      event.data
+                    ] ||
+                    "This video could not be played."
+                  );
+                },
+
+              },
+
+            }
+          );
+
       })
+
       .catch((error) => {
-        console.error("YouTube player error:", error);
+
+        console.error(
+          "YouTube player error:",
+          error
+        );
 
         if (!cancelled) {
-          setPlayerError("YouTube player could not load.");
+
+          setPlayerError(
+            "YouTube player could not load."
+          );
         }
       });
 
+
+    // =================================================
+    // Cleanup
+    // =================================================
+
     return () => {
+
       cancelled = true;
 
-      if (playerRef.current) {
+
+      if (
+        playerRef.current
+      ) {
+
         try {
           playerRef.current.destroy();
         } catch {
           // Ignore
         }
 
-        playerRef.current = null;
+        playerRef.current =
+          null;
       }
     };
-  }, [backgroundPlayEnabled, isActive, videoId]);
+
+  }, [
+    isActive,
+    videoId,
+  ]);
 
 
   // ===================================================

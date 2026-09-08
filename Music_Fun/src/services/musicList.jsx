@@ -1,33 +1,15 @@
-/**
- * @typedef {{
- *   songs?: any[];
- *   activeIndex?: number | null;
- *   autoPlayIndex?: number | null;
- *   onPlay?: (index: number) => void;
- *   onNext?: () => void | Promise<void>;
- *   onPrevious?: () => void;
- *   favoriteIds?: string[];
- *   onToggleFavorite?: (song: any) => void;
- *   backgroundPlayEnabled?: boolean;
- * }} MusicListProps
- */
-
 import Music_card from "./Music_card";
 import "./musicList.css";
 
-/**
- * @param {MusicListProps} props
- */
 function MusicList({
-  songs = [],
-  activeIndex = null,
-  autoPlayIndex = null,
-  onPlay = () => undefined,
-  onNext = () => undefined,
-  onPrevious = () => undefined,
+  songs,
+  activeIndex,
+  autoPlayIndex,
+  onPlay,
+  onNext,
+  onPrevious,
   favoriteIds = [],
-  onToggleFavorite = () => undefined,
-  backgroundPlayEnabled = true,
+  onToggleFavorite,
 }) {
 
   if (
@@ -101,8 +83,6 @@ function MusicList({
             onToggleFavorite={() =>
               onToggleFavorite?.(song)
             }
-
-            backgroundPlayEnabled={backgroundPlayEnabled}
 
           />
 
