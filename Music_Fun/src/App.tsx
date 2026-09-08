@@ -54,7 +54,6 @@ function convertYouTubeResults(items: any[]) {
       if (!item?.id?.videoId) {
         return false;
       }
-
       const text = `${item.snippet?.title || ""} ${item.snippet?.description || ""}`.toLowerCase();
       return !text.includes("#shorts") &&
         !text.includes("shorts") &&
@@ -72,6 +71,53 @@ function convertYouTubeResults(items: any[]) {
       youtubeVideoId: item.id.videoId,
       previewUrl: "",
     }));
+}
+
+function parseYouTubeDuration(value: string | undefined) {
+  const match = value?.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+
+  if (!match) {
+    return 0;
+  }
+
+  return Number(match[1] || 0) * 3600 +
+    Number(match[2] || 0) * 60 +
+    Number(match[3] || 0);
+}
+
+async function removeShortVideos(items: any[], apiKey: string) {
+  const videoIds = items
+    .map((item: any) => item?.id?.videoId)
+    .filter(Boolean);
+
+  if (!videoIds.length) {
+    return [];
+  }
+
+  const detailsUrl =
+    "https://www.googleapis.com/youtube/v3/videos" +
+    `?part=contentDetails` +
+    `&id=${videoIds.join(",")}` +
+    `&key=${apiKey}`;
+
+  try {
+    const response = await fetch(detailsUrl);
+    if (!response.ok) {
+      return items;
+    }
+
+    const data = await response.json();
+    const durations = new Map<string, number>(
+      (data.items || []).map((item: any) => [
+        item.id,
+        parseYouTubeDuration(item.contentDetails?.duration),
+      ])
+    );
+
+    return items.filter((item: any) => (durations.get(item.id.videoId) || 0) > 60);
+  } catch {
+    return items;
+  }
 }
 
 async function searchYouTube(query: string, maxResults = 12) {
@@ -98,7 +144,7 @@ async function searchYouTube(query: string, maxResults = 12) {
 
     if (response.ok) {
       const data = await response.json();
-      return data.items || [];
+      return removeShortVideos(data.items || [], apiKey);
     }
 
     const errorData = await response.json().catch(() => null);
@@ -410,13 +456,50 @@ function App() {
   if (hasSearched && !showFavorites) {
     return (
       <main className="search-results-only" aria-label="Search results">
-        <button
-          className="search-results-back"
-          type="button"
-          onClick={handleClearSearch}
-        >
-          Back to recommendations
-        </button>
+        <div className="search-results-toolbar">
+          <form className="search-results-form" onSubmit={handleSearchSubmit}>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search songs or artists..."
+              aria-label="Search songs or artists"
+            />
+            <button type="submit" disabled={!searchQuery.trim() || loading}>
+              Search
+            </button>
+          </form>
+
+          <select
+            className="search-results-sleep"
+            value={sleepMinutes}
+            onChange={(event) => setSleepMinutes(Number(event.target.value))}
+            aria-label="Sleep timer"
+          >
+            <option value="0">Sleep off</option>
+            <option value="15">Sleep 15m</option>
+            <option value="30">Sleep 30m</option>
+            <option value="45">Sleep 45m</option>
+            <option value="60">Sleep 60m</option>
+            <option value="90">Sleep 90m</option>
+          </select>
+
+          <button
+            className="search-results-favorites"
+            type="button"
+            onClick={() => setShowFavorites(true)}
+          >
+            Favorites ({favoriteIds.length})
+          </button>
+
+          <button
+            className="search-results-back"
+            type="button"
+            onClick={handleClearSearch}
+          >
+            Back to recommendations
+          </button>
+        </div>
 
         {!loading && !error && (
           <MusicList
@@ -428,6 +511,7 @@ function App() {
             onPrevious={handlePrevious}
             favoriteIds={favoriteIds}
             onToggleFavorite={handleToggleFavorite}
+            backgroundPlayEnabled={backgroundPlayEnabled}
           />
         )}
       </main>
