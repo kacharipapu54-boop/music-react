@@ -2,6 +2,11 @@
   min-height: 100svh;
 }
 
+.search-results-only .home-library {
+  min-height: 100svh;
+  padding-top: clamp(32px, 6vw, 72px);
+}
+
 .home-hero {
   position: relative;
   overflow: hidden;

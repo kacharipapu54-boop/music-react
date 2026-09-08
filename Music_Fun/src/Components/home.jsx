@@ -19,6 +19,15 @@ function Home({
   favoriteCount = 0,
   onShowFavorites,
 }) {
+  if (hasSearched && !loading && !error) {
+    return (
+      <main className="home-page search-results-only">
+        <section className="home-library" aria-label="Search results">
+          {children}
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="home-page">
