@@ -17,6 +17,7 @@
  */
 
 import MusicList from "./Components/musicList.jsx";
+import "./favorite.css";
 
 /**
  * @param {FavoritesProps} props
@@ -39,34 +40,17 @@ function Favorites({
   return (
     <main className="home-page favorites-page">
       <section className="home-library">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            marginBottom: 20,
-            flexWrap: "wrap",
-          }}
-        >
+        <div className="favorites-toolbar">
           <button className="favorites-back" type="button" onClick={onBack}>
             Back to songs
           </button>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div className="favorites-actions">
             <button
+              className="favorites-shuffle"
               type="button"
               onClick={onToggleShuffle}
               aria-pressed={shuffleEnabled}
-              style={{
-                border: "1px solid rgba(25, 51, 47, 0.2)",
-                borderRadius: 999,
-                background: shuffleEnabled ? "#19332f" : "#fffdf9",
-                color: shuffleEnabled ? "#fffdf9" : "#19332f",
-                padding: "0.7rem 1rem",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
             >
               {shuffleEnabled ? "Shuffle: On" : "Shuffle"}
             </button>
@@ -75,15 +59,7 @@ function Favorites({
               type="button"
               onClick={onToggleBackgroundPlay}
               aria-pressed={backgroundPlayEnabled}
-              style={{
-                border: "1px solid rgba(25, 51, 47, 0.2)",
-                borderRadius: 999,
-                background: backgroundPlayEnabled ? "#19332f" : "#fffdf9",
-                color: backgroundPlayEnabled ? "#fffdf9" : "#19332f",
-                padding: "0.7rem 1rem",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
+              className="favorites-background"
             >
               {backgroundPlayEnabled ? "Background play: On" : "Background play: Off"}
             </button>
