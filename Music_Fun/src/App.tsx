@@ -202,6 +202,7 @@ function App() {
     }
   });
   const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const [nowPlayingSong, setNowPlayingSong] = useState<Song | null>(null);
   const [autoPlayIndex, setAutoPlayIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -287,6 +288,7 @@ function App() {
 
       if (remaining === 0) {
         setActiveSongId(null);
+        setNowPlayingSong(null);
         setAutoPlayIndex(null);
         setSleepMinutes(0);
       }
@@ -310,9 +312,10 @@ function App() {
   const activeIndex = currentSongs.findIndex(
     (song: Song) => song.youtubeVideoId === activeSongId
   );
-  const activeSong = removeDuplicateSongs([...favoriteLibrary, ...songs]).find(
-    (song) => song.youtubeVideoId === activeSongId
-  );
+  const activeSong = nowPlayingSong ||
+    removeDuplicateSongs([...favoriteLibrary, ...songs]).find(
+      (song) => song.youtubeVideoId === activeSongId
+    );
 
   const handlePlay = useCallback(
     (index: number) => {
@@ -322,6 +325,7 @@ function App() {
       }
 
       setActiveSongId(song.youtubeVideoId);
+      setNowPlayingSong(song);
       setAutoPlayIndex(index);
     },
     [currentSongs]
@@ -339,6 +343,7 @@ function App() {
     }
 
     setActiveSongId(nextSong.youtubeVideoId);
+    setNowPlayingSong(nextSong);
     setAutoPlayIndex(previousIndex);
   }, [activeIndex, currentSongs]);
 
@@ -385,6 +390,7 @@ function App() {
     }
 
     setActiveSongId(nextSong.youtubeVideoId);
+    setNowPlayingSong(nextSong);
     setAutoPlayIndex(nextIndex);
 
     if (showFavorites) {
@@ -405,6 +411,7 @@ function App() {
             removeDuplicateSongs([...existingSongs, ...newSongs]).slice(0, 60)
           );
           setActiveSongId(nextSong.youtubeVideoId);
+          setNowPlayingSong(nextSong);
           setAutoPlayIndex(currentSongs.length);
         }
       } finally {
@@ -424,11 +431,15 @@ function App() {
         : [...currentFavorites, song.youtubeVideoId]
     );
 
-    setFavoriteLibrary((currentSongs) =>
-      currentSongs.some((savedSong) => savedSong.youtubeVideoId === song.youtubeVideoId)
+    setFavoriteLibrary((currentSongs) => {
+      const isAlreadySaved = currentSongs.some(
+        (savedSong) => savedSong.youtubeVideoId === song.youtubeVideoId
+      );
+
+      return isAlreadySaved
         ? currentSongs
-        : [...currentSongs, song]
-    );
+        : [...currentSongs, song];
+    });
   }, []);
 
   const handleSearchSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -447,8 +458,6 @@ function App() {
       const items = await searchYouTube(query, 20);
       const results = removeDuplicateSongs(convertYouTubeResults(items));
       setSongs(results);
-      setActiveSongId(null);
-      setAutoPlayIndex(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to search YouTube.");
       setSongs([]);
