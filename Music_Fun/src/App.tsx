@@ -410,6 +410,14 @@ function App() {
   if (hasSearched && !showFavorites) {
     return (
       <main className="search-results-only" aria-label="Search results">
+        <button
+          className="search-results-back"
+          type="button"
+          onClick={handleClearSearch}
+        >
+          Back to recommendations
+        </button>
+
         {!loading && !error && (
           <MusicList
             songs={songs}
