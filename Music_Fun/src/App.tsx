@@ -158,12 +158,19 @@ async function searchYouTube(query: string, maxResults = 12) {
       reason === "userRateLimitExceeded" ||
       errorData?.error?.status === "RESOURCE_EXHAUSTED";
 
-    if (!quotaError) {
+    const invalidKeyError =
+      reason === "keyInvalid" ||
+      errorData?.error?.status === "INVALID_ARGUMENT" ||
+      response.status === 400 && /api key|key invalid/i.test(lastError);
+
+    if (!quotaError && !invalidKeyError) {
       throw new Error(lastError);
     }
   }
 
-  throw new Error(`${lastError} All configured YouTube API keys are exhausted.`);
+  throw new Error(
+    `${lastError} All configured YouTube API keys were rejected or exhausted.`
+  );
 }
 
 function shuffleArray(items: Song[]) {
