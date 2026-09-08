@@ -1,8 +1,8 @@
 .music-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 22px;
-  max-width: 1180px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+  width: min(1280px, 100%);
   margin: 0 auto;
 }
 

@@ -1,18 +1,21 @@
 .music-card {
+  position: relative;
   display: grid;
   gap: 16px;
   align-content: start;
-  padding: 18px;
-  border: 1px solid rgba(25, 51, 47, 0.12);
-  border-radius: 14px;
-  background: rgba(255, 253, 249, 0.86);
-  box-shadow: 0 12px 30px rgba(25, 51, 47, 0.08);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: linear-gradient(155deg, rgba(39, 38, 49, 0.96), rgba(21, 21, 28, 0.96));
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2), inset 0 1px rgba(255, 255, 255, 0.05);
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
 }
 
 .music-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 36px rgba(25, 51, 47, 0.14);
+  transform: translateY(-5px);
+  border-color: rgba(255, 159, 190, 0.42);
+  box-shadow: 0 22px 42px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 61, 129, 0.08);
 }
 
 .cover-button {
@@ -26,6 +29,7 @@
   border-radius: 10px;
   background: #dce8df;
   cursor: pointer;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
 }
 
 .cover-button img {
@@ -87,11 +91,11 @@
 .music-info h3 {
   margin: 0;
   overflow: hidden;
-  color: #19332f;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.25rem;
+  color: #fffaf7;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.08rem;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -99,8 +103,9 @@
 .music-info p {
   margin: 6px 0 0;
   overflow: hidden;
-  color: #60716b;
-  font-size: 0.88rem;
+  color: #aaa4ad;
+  font-size: 0.78rem;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -122,8 +127,8 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  color: #60716b;
-  background: transparent;
+  color: #aaa4ad;
+  background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
   font-size: 1.35rem;
   line-height: 1;
@@ -131,7 +136,8 @@
 
 .favorite-button:hover,
 .favorite-button.is-favorite {
-  color: #d9654e;
+  color: #ff9fbe;
+  background: rgba(255, 61, 129, 0.14);
 }
 
 .track-controls {
@@ -141,11 +147,11 @@
 
 .track-control-button {
   flex: 1;
-  border: 1px solid rgba(25, 51, 47, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 7px;
   padding: 9px 10px;
-  color: #19332f;
-  background: transparent;
+  color: #d7d1d6;
+  background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
   font: inherit;
   font-size: 0.78rem;
@@ -153,8 +159,9 @@
 }
 
 .track-control-button:hover {
-  color: #fffdf9;
-  background: #19332f;
+  color: #fff;
+  border-color: rgba(255, 159, 190, 0.5);
+  background: rgba(255, 61, 129, 0.16);
 }
 
 .youtube-player {

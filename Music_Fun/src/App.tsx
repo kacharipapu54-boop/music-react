@@ -125,6 +125,7 @@ function shuffleArray(items: Song[]) {
 
 function App() {
   const [songs, setSongs] = useState<Song[]>([]);
+  const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("favoriteSongIds") || "[]");
@@ -145,6 +146,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [sleepMinutes, setSleepMinutes] = useState(0);
+  const [sleepRemaining, setSleepRemaining] = useState(0);
 
   useEffect(() => {
     localStorage.setItem("favoriteSongIds", JSON.stringify(favoriteIds));
@@ -170,7 +172,9 @@ function App() {
         const allItems = results.flat();
         const newSongs = convertYouTubeResults(allItems);
         const uniqueSongs = removeDuplicateSongs(newSongs);
-        setSongs(uniqueSongs.slice(0, 20));
+        const recommendations = uniqueSongs.slice(0, 20);
+        setRecommendedSongs(recommendations);
+        setSongs(recommendations);
       } catch (err) {
         if (!cancelled) {
           console.error(err);
@@ -189,6 +193,31 @@ function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (sleepMinutes <= 0) {
+      setSleepRemaining(0);
+      return;
+    }
+
+    const endTime = Date.now() + sleepMinutes * 60 * 1000;
+
+    const updateTimer = () => {
+      const remaining = Math.max(0, endTime - Date.now());
+      setSleepRemaining(remaining);
+
+      if (remaining === 0) {
+        setActiveSongId(null);
+        setAutoPlayIndex(null);
+        setSleepMinutes(0);
+      }
+    };
+
+    updateTimer();
+    const timer = window.setInterval(updateTimer, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [sleepMinutes]);
 
   const favoriteSongs = useMemo(() => {
     const visibleFavorites = songs.filter((song) => favoriteIds.includes(song.youtubeVideoId));
@@ -299,14 +328,37 @@ function App() {
     );
   }, []);
 
-  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSearchSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setHasSearched(Boolean(searchQuery.trim()));
+    const query = searchQuery.trim();
+
+    if (!query) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      setHasSearched(true);
+
+      const items = await searchYouTube(query, 20);
+      const results = removeDuplicateSongs(convertYouTubeResults(items));
+      setSongs(results);
+      setActiveSongId(null);
+      setAutoPlayIndex(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to search YouTube.");
+      setSongs([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClearSearch = () => {
     setSearchQuery("");
     setHasSearched(false);
+    setError("");
+    setSongs(recommendedSongs);
   };
 
   const handleShuffleFavorites = () => {
@@ -342,8 +394,8 @@ function App() {
       hasSearched={hasSearched}
       sleepMinutes={sleepMinutes}
       setSleepMinutes={setSleepMinutes}
-      sleepRemaining={0}
-      formattedSleepTime="0m"
+      sleepRemaining={sleepRemaining}
+      formattedSleepTime={`${Math.ceil(sleepRemaining / 60000)}m`}
       favoriteCount={favoriteIds.length}
       onShowFavorites={() => setShowFavorites(true)}
     >
