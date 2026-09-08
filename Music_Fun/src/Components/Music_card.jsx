@@ -255,26 +255,12 @@ function Music_card({
       }
 
       if (document.hidden) {
-        if (backgroundPlayEnabled) {
-          try {
-            playerRef.current.mute();
-            playerRef.current.playVideo();
-          } catch {
-            // Ignore
-          }
-        } else {
+        if (!backgroundPlayEnabled) {
           try {
             playerRef.current.pauseVideo();
           } catch {
             // Ignore
           }
-        }
-      } else if (backgroundPlayEnabled) {
-        try {
-          playerRef.current.unMute?.();
-          playerRef.current.playVideo();
-        } catch {
-          // Ignore
         }
       }
     };
@@ -311,7 +297,6 @@ function Music_card({
             rel: 0,
             modestbranding: 1,
             enablejsapi: 1,
-            mute: backgroundPlayEnabled ? 1 : 0,
             origin: window.location.origin,
           },
 
@@ -322,10 +307,6 @@ function Music_card({
               }
 
               setPlayerReady(true);
-
-              if (backgroundPlayEnabled) {
-                event.target.mute();
-              }
 
               event.target.playVideo();
             },
@@ -378,7 +359,7 @@ function Music_card({
         playerRef.current = null;
       }
     };
-  }, [backgroundPlayEnabled, isActive, videoId]);
+  }, [isActive, videoId]);
 
 
   // ===================================================

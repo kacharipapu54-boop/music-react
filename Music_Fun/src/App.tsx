@@ -89,7 +89,17 @@ async function searchYouTube(query: string, maxResults = 12) {
 }
 
 function shuffleArray(items: Song[]) {
-  return [...items].sort(() => Math.random() - 0.5);
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [
+      shuffled[randomIndex],
+      shuffled[index],
+    ];
+  }
+
+  return shuffled;
 }
 
 function App() {
@@ -109,6 +119,7 @@ function App() {
   const [error, setError] = useState("");
   const [showFavorites, setShowFavorites] = useState(false);
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
+  const [shuffleVersion, setShuffleVersion] = useState(0);
   const [backgroundPlayEnabled, setBackgroundPlayEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -161,7 +172,7 @@ function App() {
   const favoriteSongs = useMemo(() => {
     const visibleFavorites = songs.filter((song) => favoriteIds.includes(song.youtubeVideoId));
     return shuffleEnabled ? shuffleArray(visibleFavorites) : visibleFavorites;
-  }, [songs, favoriteIds, shuffleEnabled]);
+  }, [songs, favoriteIds, shuffleEnabled, shuffleVersion]);
 
   const currentSongs = showFavorites ? favoriteSongs : songs;
   const activeIndex = currentSongs.findIndex(
@@ -278,7 +289,8 @@ function App() {
   };
 
   const handleShuffleFavorites = () => {
-    setShuffleEnabled((currentValue) => !currentValue);
+    setShuffleEnabled(true);
+    setShuffleVersion((currentVersion) => currentVersion + 1);
   };
 
   return showFavorites ? (
