@@ -14,12 +14,7 @@ type Song = {
   genre?: string;
 };
 
-const API_KEYS = [
-  import.meta.env.VITE_YOUTUBE_API_KEY,
-  ...(import.meta.env.VITE_YOUTUBE_API_KEYS || "").split(","),
-]
-  .map((key: string) => key.trim())
-  .filter(Boolean);
+const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
 const INITIAL_QUERIES = [
   "Hindi songs 2026",
@@ -121,57 +116,35 @@ async function removeShortVideos(items: any[], apiKey: string) {
 }
 
 async function searchYouTube(query: string, maxResults = 12) {
-  if (!API_KEYS.length) {
+  if (!API_KEY) {
     throw new Error(
       "YouTube API key is missing. Add VITE_YOUTUBE_API_KEY to .env.local"
     );
   }
 
-  let lastError = "YouTube API request failed.";
+  const url =
+    "https://www.googleapis.com/youtube/v3/search" +
+    `?part=snippet` +
+    `&q=${encodeURIComponent(`${query} -shorts`)}` +
+    `&type=video` +
+    `&videoEmbeddable=true` +
+    `&videoSyndicated=true` +
+    `&maxResults=${maxResults}` +
+    `&key=${API_KEY}`;
 
-  for (const apiKey of API_KEYS) {
-    const url =
-      "https://www.googleapis.com/youtube/v3/search" +
-      `?part=snippet` +
-      `&q=${encodeURIComponent(`${query} -shorts`)}` +
-      `&type=video` +
-      `&videoEmbeddable=true` +
-      `&videoSyndicated=true` +
-      `&maxResults=${maxResults}` +
-      `&key=${apiKey}`;
+  const response = await fetch(url);
 
-    const response = await fetch(url);
-
-    if (response.ok) {
-      const data = await response.json();
-      return removeShortVideos(data.items || [], apiKey);
-    }
-
-    const errorData = await response.json().catch(() => null);
-    const reason = errorData?.error?.errors?.[0]?.reason;
-    lastError = errorData?.error?.message || `YouTube API error: ${response.status}`;
-
-    const quotaError =
-      reason === "quotaExceeded" ||
-      reason === "rateLimitExceeded" ||
-      reason === "dailyLimitExceeded" ||
-      reason === "userRateLimitExceeded" ||
-      errorData?.error?.status === "RESOURCE_EXHAUSTED";
-
-    const invalidKeyError =
-      reason === "keyInvalid" ||
-      errorData?.error?.status === "INVALID_ARGUMENT" ||
-      response.status === 400 && /api key|key invalid/i.test(lastError);
-
-    if (!quotaError && !invalidKeyError) {
-      throw new Error(lastError);
-    }
+  if (response.ok) {
+    const data = await response.json();
+    return removeShortVideos(data.items || [], API_KEY);
   }
 
+  const errorData = await response.json().catch(() => null);
   throw new Error(
-    `${lastError} All configured YouTube API keys were rejected or exhausted.`
+    errorData?.error?.message || `YouTube API error: ${response.status}`
   );
 }
+
 
 function shuffleArray(items: Song[]) {
   const shuffled = [...items];
