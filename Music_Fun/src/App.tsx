@@ -50,7 +50,16 @@ function removeDuplicateSongs(songs: Song[]) {
 
 function convertYouTubeResults(items: any[]) {
   return items
-    .filter((item: any) => item?.id?.videoId)
+    .filter((item: any) => {
+      if (!item?.id?.videoId) {
+        return false;
+      }
+
+      const text = `${item.snippet?.title || ""} ${item.snippet?.description || ""}`.toLowerCase();
+      return !text.includes("#shorts") &&
+        !text.includes("shorts") &&
+        !text.includes("short video");
+    })
     .map((item: any) => ({
       trackId: item.id.videoId,
       trackName: item.snippet?.title || "Unknown Song",
@@ -78,7 +87,7 @@ async function searchYouTube(query: string, maxResults = 12) {
     const url =
       "https://www.googleapis.com/youtube/v3/search" +
       `?part=snippet` +
-      `&q=${encodeURIComponent(query)}` +
+      `&q=${encodeURIComponent(`${query} -shorts`)}` +
       `&type=video` +
       `&videoEmbeddable=true` +
       `&videoSyndicated=true` +
