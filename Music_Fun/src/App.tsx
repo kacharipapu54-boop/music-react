@@ -310,6 +310,9 @@ function App() {
   const activeIndex = currentSongs.findIndex(
     (song: Song) => song.youtubeVideoId === activeSongId
   );
+  const activeSong = removeDuplicateSongs([...favoriteLibrary, ...songs]).find(
+    (song) => song.youtubeVideoId === activeSongId
+  );
 
   const handlePlay = useCallback(
     (index: number) => {
@@ -466,6 +469,22 @@ function App() {
     setShuffleVersion((currentVersion) => currentVersion + 1);
   };
 
+  const floatingPlayer = activeSong ? (
+    <div className="floating-player" aria-label="Now playing">
+      <MusicList
+        songs={[activeSong]}
+        activeIndex={0}
+        autoPlayIndex={autoPlayIndex}
+        onPlay={() => undefined}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+        favoriteIds={favoriteIds}
+        onToggleFavorite={handleToggleFavorite}
+        backgroundPlayEnabled={backgroundPlayEnabled}
+      />
+    </div>
+  ) : null;
+
   if (hasSearched && !showFavorites) {
     return (
       <main className="search-results-only" aria-label="Search results">
@@ -517,8 +536,8 @@ function App() {
         {!loading && !error && (
           <MusicList
             songs={songs}
-            activeIndex={activeIndex}
-            autoPlayIndex={autoPlayIndex}
+            activeIndex={-1}
+            autoPlayIndex={null}
             onPlay={handlePlay}
             onNext={handleNext}
             onPrevious={handlePrevious}
@@ -527,54 +546,60 @@ function App() {
             backgroundPlayEnabled={backgroundPlayEnabled}
           />
         )}
+        {floatingPlayer}
       </main>
     );
   }
 
-  return showFavorites ? (
-    <Favorites
-      songs={favoriteSongs}
-      activeIndex={activeIndex}
-      autoPlayIndex={autoPlayIndex}
-      onPlay={handlePlay}
-      onNext={handleNext}
-      onPrevious={handlePrevious}
-      favoriteIds={favoriteIds}
-      onToggleFavorite={handleToggleFavorite}
-      onBack={() => setShowFavorites(false)}
-      shuffleEnabled={shuffleEnabled}
-      onToggleShuffle={handleShuffleFavorites}
-      backgroundPlayEnabled={backgroundPlayEnabled}
-      onToggleBackgroundPlay={() => setBackgroundPlayEnabled((currentValue) => !currentValue)}
-    />
-  ) : (
-    <Home
-      loading={loading}
-      error={error}
-      songCount={songs.length}
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      onSearch={handleSearchSubmit}
-      onClearSearch={handleClearSearch}
-      hasSearched={hasSearched}
-      sleepMinutes={sleepMinutes}
-      setSleepMinutes={setSleepMinutes}
-      sleepRemaining={sleepRemaining}
-      formattedSleepTime={`${Math.ceil(sleepRemaining / 60000)}m`}
-      favoriteCount={favoriteIds.length}
-      onShowFavorites={() => setShowFavorites(true)}
-    >
-      <MusicList
-        songs={songs}
-        activeIndex={activeIndex}
-        autoPlayIndex={autoPlayIndex}
-        onPlay={handlePlay}
-        onNext={handleNext}
-        onPrevious={handlePrevious}
-        favoriteIds={favoriteIds}
-        onToggleFavorite={handleToggleFavorite}
-      />
-    </Home>
+  return (
+    <>
+      {showFavorites ? (
+        <Favorites
+          songs={favoriteSongs}
+          activeIndex={-1}
+          autoPlayIndex={null}
+          onPlay={handlePlay}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={handleToggleFavorite}
+          onBack={() => setShowFavorites(false)}
+          shuffleEnabled={shuffleEnabled}
+          onToggleShuffle={handleShuffleFavorites}
+          backgroundPlayEnabled={backgroundPlayEnabled}
+          onToggleBackgroundPlay={() => setBackgroundPlayEnabled((currentValue) => !currentValue)}
+        />
+      ) : (
+        <Home
+          loading={loading}
+          error={error}
+          songCount={songs.length}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onSearch={handleSearchSubmit}
+          onClearSearch={handleClearSearch}
+          hasSearched={hasSearched}
+          sleepMinutes={sleepMinutes}
+          setSleepMinutes={setSleepMinutes}
+          sleepRemaining={sleepRemaining}
+          formattedSleepTime={`${Math.ceil(sleepRemaining / 60000)}m`}
+          favoriteCount={favoriteIds.length}
+          onShowFavorites={() => setShowFavorites(true)}
+        >
+          <MusicList
+            songs={songs}
+            activeIndex={-1}
+            autoPlayIndex={null}
+            onPlay={handlePlay}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={handleToggleFavorite}
+          />
+        </Home>
+      )}
+      {floatingPlayer}
+    </>
   );
 }
 

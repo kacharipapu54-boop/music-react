@@ -18,3 +18,42 @@
     grid-template-columns: 1fr;
   }
 }
+
+.floating-player {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 20;
+  width: min(360px, calc(100vw - 32px));
+  padding: 8px;
+  border: 1px solid rgba(255, 159, 190, 0.3);
+  border-radius: 18px;
+  background: rgba(13, 13, 18, 0.94);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 26px rgba(255, 61, 129, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.floating-player .music-list {
+  display: block;
+  width: 100%;
+}
+
+.floating-player .music-card {
+  padding: 8px;
+  border: 0;
+  box-shadow: none;
+}
+
+.floating-player .music-card:hover {
+  transform: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+@media (max-width: 600px) {
+  .floating-player {
+    right: 16px;
+    bottom: 16px;
+    width: calc(100vw - 32px);
+  }
+}
