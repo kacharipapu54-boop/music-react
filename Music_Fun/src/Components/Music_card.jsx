@@ -12,6 +12,7 @@ import "./Music_card.css";
 // =====================================================
 
 let youtubeApiPromise = null;
+const playbackPositions = new Map();
 
 function loadYouTubeApi() {
 
@@ -312,6 +313,11 @@ function Music_card({
 
               setPlayerReady(true);
 
+              const savedPosition = playbackPositions.get(videoId);
+              if (savedPosition > 0) {
+                event.target.seekTo(savedPosition, true);
+              }
+
               event.target.playVideo();
               setIsPlaying(true);
             },
@@ -364,6 +370,11 @@ function Music_card({
 
       if (playerRef.current) {
         try {
+          const currentTime = playerRef.current.getCurrentTime?.();
+          if (typeof currentTime === "number" && currentTime > 0) {
+            playbackPositions.set(videoId, currentTime);
+          }
+
           playerRef.current.destroy();
         } catch {
           // Ignore

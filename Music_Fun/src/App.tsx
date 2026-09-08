@@ -17,12 +17,30 @@ type Song = {
 const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
 const INITIAL_QUERIES = [
-  "Hindi songs 2026",
-  "Bollywood songs 2026",
-  "Arijit Singh songs",
-  "Hindi romantic songs",
-  "English popular songs 2026",
+  "popular Hindi songs official",
 ];
+
+const SEARCH_CACHE_PREFIX = "youtube-results:";
+
+function getCachedResults(query: string) {
+  try {
+    const saved = localStorage.getItem(`${SEARCH_CACHE_PREFIX}${query.trim().toLowerCase()}`);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheResults(query: string, results: any[]) {
+  try {
+    localStorage.setItem(
+      `${SEARCH_CACHE_PREFIX}${query.trim().toLowerCase()}`,
+      JSON.stringify(results)
+    );
+  } catch {
+    // Cached results are optional.
+  }
+}
 
 function removeDuplicateSongs(songs: Song[]) {
   const seen = new Set<string>();
@@ -122,6 +140,11 @@ async function searchYouTube(query: string, maxResults = 12) {
     );
   }
 
+  const cachedResults = getCachedResults(query);
+  if (Array.isArray(cachedResults) && cachedResults.length) {
+    return cachedResults;
+  }
+
   const url =
     "https://www.googleapis.com/youtube/v3/search" +
     `?part=snippet` +
@@ -136,10 +159,27 @@ async function searchYouTube(query: string, maxResults = 12) {
 
   if (response.ok) {
     const data = await response.json();
-    return removeShortVideos(data.items || [], API_KEY);
+    const results = await removeShortVideos(data.items || [], API_KEY);
+    cacheResults(query, results);
+    return results;
   }
 
   const errorData = await response.json().catch(() => null);
+  const reason = errorData?.error?.errors?.[0]?.reason;
+  const isQuotaError =
+    reason === "quotaExceeded" ||
+    reason === "rateLimitExceeded" ||
+    reason === "dailyLimitExceeded" ||
+    reason === "userRateLimitExceeded" ||
+    errorData?.error?.status === "RESOURCE_EXHAUSTED";
+
+  if (isQuotaError) {
+    const cachedResults = getCachedResults(query);
+    if (Array.isArray(cachedResults) && cachedResults.length) {
+      return cachedResults;
+    }
+  }
+
   throw new Error(
     errorData?.error?.message || `YouTube API error: ${response.status}`
   );
@@ -301,12 +341,11 @@ function App() {
   }, [sleepMinutes]);
 
   const favoriteSongs = useMemo(() => {
-    const allKnownSongs = removeDuplicateSongs([...favoriteLibrary, ...songs]);
-    const visibleFavorites = allKnownSongs.filter((song) =>
+    const visibleFavorites = favoriteLibrary.filter((song) =>
       favoriteIds.includes(song.youtubeVideoId)
     );
     return shuffleEnabled ? shuffleArray(visibleFavorites) : visibleFavorites;
-  }, [favoriteLibrary, songs, favoriteIds, shuffleEnabled, shuffleVersion]);
+  }, [favoriteLibrary, favoriteIds, shuffleEnabled, shuffleVersion]);
 
   const currentSongs = showFavorites ? favoriteSongs : songs;
   const activeIndex = currentSongs.findIndex(
@@ -432,15 +471,22 @@ function App() {
     );
 
     setFavoriteLibrary((currentSongs) => {
-      const isAlreadySaved = currentSongs.some(
-        (savedSong) => savedSong.youtubeVideoId === song.youtubeVideoId
-      );
+      const isFavorite = favoriteIds.includes(song.youtubeVideoId);
 
-      return isAlreadySaved
-        ? currentSongs
-        : [...currentSongs, song];
+      if (isFavorite) {
+        return currentSongs.filter(
+          (savedSong) => savedSong.youtubeVideoId !== song.youtubeVideoId
+        );
+      }
+
+      return [
+        ...currentSongs.filter(
+          (savedSong) => savedSong.youtubeVideoId !== song.youtubeVideoId
+        ),
+        song,
+      ];
     });
-  }, []);
+  }, [favoriteIds]);
 
   const handleSearchSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -460,7 +506,6 @@ function App() {
       setSongs(results);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to search YouTube.");
-      setSongs([]);
     } finally {
       setLoading(false);
     }
@@ -494,73 +539,68 @@ function App() {
     </div>
   ) : null;
 
-  if (hasSearched && !showFavorites) {
-    return (
-      <main className="search-results-only" aria-label="Search results">
-        <div className="search-results-toolbar">
-          <form className="search-results-form" onSubmit={handleSearchSubmit}>
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search songs or artists..."
-              aria-label="Search songs or artists"
-            />
-            <button type="submit" disabled={!searchQuery.trim() || loading}>
-              Search
-            </button>
-          </form>
-
-          <select
-            className="search-results-sleep"
-            value={sleepMinutes}
-            onChange={(event) => setSleepMinutes(Number(event.target.value))}
-            aria-label="Sleep timer"
-          >
-            <option value="0">Sleep off</option>
-            <option value="15">Sleep 15m</option>
-            <option value="30">Sleep 30m</option>
-            <option value="45">Sleep 45m</option>
-            <option value="60">Sleep 60m</option>
-            <option value="90">Sleep 90m</option>
-          </select>
-
-          <button
-            className="search-results-favorites"
-            type="button"
-            onClick={() => setShowFavorites(true)}
-          >
-            Favorites ({favoriteIds.length})
-          </button>
-
-          <button
-            className="search-results-back"
-            type="button"
-            onClick={handleClearSearch}
-          >
-            Back to recommendations
-          </button>
-        </div>
-
-        {!loading && !error && (
-          <MusicList
-            songs={songs}
-            activeIndex={-1}
-            autoPlayIndex={null}
-            onPlay={handlePlay}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-            favoriteIds={favoriteIds}
-            onToggleFavorite={handleToggleFavorite}
-            backgroundPlayEnabled={backgroundPlayEnabled}
+  const pageContent = hasSearched && !showFavorites ? (
+    <main className="search-results-only" aria-label="Search results">
+      <div className="search-results-toolbar">
+        <form className="search-results-form" onSubmit={handleSearchSubmit}>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search songs or artists..."
+            aria-label="Search songs or artists"
           />
-        )}
-        {floatingPlayer}
-      </main>
-    );
-  }
+          <button type="submit" disabled={!searchQuery.trim() || loading}>
+            Search
+          </button>
+        </form>
 
-  return (
+        <select
+          className="search-results-sleep"
+          value={sleepMinutes}
+          onChange={(event) => setSleepMinutes(Number(event.target.value))}
+          aria-label="Sleep timer"
+        >
+          <option value="0">Sleep off</option>
+          <option value="15">Sleep 15m</option>
+          <option value="30">Sleep 30m</option>
+          <option value="45">Sleep 45m</option>
+          <option value="60">Sleep 60m</option>
+          <option value="90">Sleep 90m</option>
+        </select>
+
+        <button
+          className="search-results-favorites"
+          type="button"
+          onClick={() => setShowFavorites(true)}
+        >
+          Favorites ({favoriteIds.length})
+        </button>
+
+        <button
+          className="search-results-back"
+          type="button"
+          onClick={handleClearSearch}
+        >
+          Back to recommendations
+        </button>
+      </div>
+
+      {!loading && !error && (
+        <MusicList
+          songs={songs}
+          activeIndex={-1}
+          autoPlayIndex={null}
+          onPlay={handlePlay}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={handleToggleFavorite}
+          backgroundPlayEnabled={backgroundPlayEnabled}
+        />
+      )}
+    </main>
+  ) : (
     <>
       {showFavorites ? (
         <Favorites
@@ -607,6 +647,12 @@ function App() {
           />
         </Home>
       )}
+    </>
+  );
+
+  return (
+    <>
+      {pageContent}
       {floatingPlayer}
     </>
   );
