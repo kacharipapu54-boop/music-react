@@ -57,10 +57,8 @@ type VideoDetails = {
   };
 };
 
-const DEFAULT_QUERY =
-  "popular songs 2026";
-
 const RECOMMENDATION_QUERIES = [
+  "new released songs 2026",
   "popular songs 2026",
   "new hit songs 2026",
   "trending music 2026",
@@ -700,9 +698,14 @@ function App() {
         setError("");
 
 
+        const randomQuery =
+          RECOMMENDATION_QUERIES[
+            Math.floor(Math.random() * RECOMMENDATION_QUERIES.length)
+          ];
+
         const results =
           await searchYouTube(
-            DEFAULT_QUERY,
+            randomQuery,
             50
           );
 
@@ -884,8 +887,7 @@ function App() {
         try {
 
           recommendationQueryIndex.current =
-            (recommendationQueryIndex.current + 1) %
-            RECOMMENDATION_QUERIES.length;
+            Math.floor(Math.random() * RECOMMENDATION_QUERIES.length);
 
           const recommendationQuery =
             RECOMMENDATION_QUERIES[
