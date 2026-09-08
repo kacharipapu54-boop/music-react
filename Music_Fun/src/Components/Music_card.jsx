@@ -216,6 +216,9 @@ function Music_card({
   const [playerError, setPlayerError] =
     useState("");
 
+  const [isPlaying, setIsPlaying] =
+    useState(false);
+
 
   const videoId =
     getYouTubeId(
@@ -281,6 +284,7 @@ function Music_card({
 
     setPlayerReady(false);
     setPlayerError("");
+    setIsPlaying(false);
 
     loadYouTubeApi()
       .then((YT) => {
@@ -309,9 +313,18 @@ function Music_card({
               setPlayerReady(true);
 
               event.target.playVideo();
+              setIsPlaying(true);
             },
 
             onStateChange: (event) => {
+              if (event.data === YT.PlayerState.PLAYING) {
+                setIsPlaying(true);
+              }
+
+              if (event.data === YT.PlayerState.PAUSED) {
+                setIsPlaying(false);
+              }
+
               if (event.data === YT.PlayerState.ENDED) {
                 nextRef.current?.();
               }
@@ -373,6 +386,20 @@ function Music_card({
 
       onPlay?.();
     };
+
+  const handleTogglePlayback = (event) => {
+    event.stopPropagation();
+
+    if (!playerRef.current) {
+      return;
+    }
+
+    if (isPlaying) {
+      playerRef.current.pauseVideo();
+    } else {
+      playerRef.current.playVideo();
+    }
+  };
 
 
   return (
@@ -507,6 +534,15 @@ function Music_card({
 
       {isActive && (
         <div className="track-controls" aria-label="Track navigation">
+          <button
+            className="track-control-button track-play-button"
+            type="button"
+            onClick={handleTogglePlayback}
+            aria-label={isPlaying ? "Pause song" : "Play song"}
+          >
+            {isPlaying ? "Pause" : "Play"}
+          </button>
+
           <button
             className="track-control-button"
             type="button"
