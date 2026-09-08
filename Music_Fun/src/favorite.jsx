@@ -18,6 +18,7 @@
 
 import MusicList from "./Components/musicList.jsx";
 import "./favorite.css";
+import "./services/home.css";
 
 /**
  * @param {FavoritesProps} props
