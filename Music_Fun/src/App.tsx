@@ -10,6 +10,8 @@ type Song = {
   artworkUrl100: string;
   youtubeVideoId: string;
   previewUrl: string;
+  language?: string;
+  genre?: string;
 };
 
 const API_KEYS = [
@@ -121,6 +123,28 @@ function shuffleArray(items: Song[]) {
   }
 
   return shuffled;
+}
+
+function titleWords(title: string) {
+  return new Set(
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .split(/\s+/)
+      .filter((word) => word.length > 3)
+  );
+}
+
+function isDifferentSong(candidate: Song, currentSong: Song) {
+  if (candidate.youtubeVideoId === currentSong.youtubeVideoId) {
+    return false;
+  }
+
+  const currentWords = titleWords(currentSong.trackName);
+  const candidateWords = titleWords(candidate.trackName);
+  const sharedWords = [...currentWords].filter((word) => candidateWords.has(word));
+
+  return sharedWords.length < Math.max(2, Math.ceil(currentWords.size * 0.6));
 }
 
 function App() {
@@ -257,35 +281,39 @@ function App() {
     setAutoPlayIndex(previousIndex);
   }, [activeIndex, currentSongs]);
 
-  const getSimilarSongs = useCallback(async (song: Song) => {
-    if (!song) {
-      return [];
-    }
-
-    const query = `${song.trackName} ${song.artistName} songs`;
-
-    try {
-      const items = await searchYouTube(query, 12);
-      return convertYouTubeResults(items);
-    } catch (err) {
-      console.error("Could not load similar songs:", err);
-      return [];
-    }
-  }, []);
-
   const handleNext = useCallback(async () => {
     if (!currentSongs.length || activeIndex === -1) {
       return;
     }
 
+    const currentSong = currentSongs[activeIndex];
+    if (!currentSong) {
+      return;
+    }
+
+    const relatedSongs = currentSongs.filter(
+      (song) =>
+        song.youtubeVideoId !== currentSong.youtubeVideoId &&
+        (song.artistName.toLowerCase() === currentSong.artistName.toLowerCase() ||
+          Boolean(currentSong.genre && song.genre === currentSong.genre) ||
+          Boolean(currentSong.language && song.language === currentSong.language))
+    );
+
     let nextIndex = activeIndex + 1;
 
-    if (shuffleEnabled && currentSongs.length > 1) {
+    if (relatedSongs.length) {
+      const nextSong = relatedSongs[Math.floor(Math.random() * relatedSongs.length)];
+      nextIndex = currentSongs.findIndex(
+        (song) => song.youtubeVideoId === nextSong.youtubeVideoId
+      );
+    } else if (shuffleEnabled && currentSongs.length > 1) {
       const pool = currentSongs
         .map((_, idx) => idx)
         .filter((idx) => idx !== activeIndex);
       nextIndex = pool[Math.floor(Math.random() * pool.length)];
-    } else if (nextIndex >= currentSongs.length) {
+    }
+
+    if (nextIndex >= currentSongs.length) {
       nextIndex = 0;
     }
 
@@ -298,23 +326,27 @@ function App() {
     setActiveSongId(nextSong.youtubeVideoId);
     setAutoPlayIndex(nextIndex);
 
-    if (nextIndex === 0 && currentSongs.length === 1 && !loadingMore) {
-      const currentSong = currentSongs[activeIndex];
-      if (!currentSong) {
-        return;
-      }
-
+    if (!relatedSongs.length && !showFavorites && !loadingMore) {
       try {
         setLoadingMore(true);
-        const newSongs = await getSimilarSongs(currentSong);
+        const items = await searchYouTube(`${currentSong.artistName} songs`, 12);
+        const newSongs = removeDuplicateSongs(convertYouTubeResults(items)).filter(
+          (song) => isDifferentSong(song, currentSong)
+        );
+
         if (newSongs.length) {
-          setSongs((existingSongs) => removeDuplicateSongs([...existingSongs, ...newSongs]).slice(0, 60));
+          const nextSong = newSongs[0];
+          setSongs((existingSongs) =>
+            removeDuplicateSongs([...existingSongs, ...newSongs]).slice(0, 60)
+          );
+          setActiveSongId(nextSong.youtubeVideoId);
+          setAutoPlayIndex(currentSongs.length);
         }
       } finally {
         setLoadingMore(false);
       }
     }
-  }, [activeIndex, currentSongs, getSimilarSongs, loadingMore, shuffleEnabled]);
+  }, [activeIndex, currentSongs, loadingMore, showFavorites, shuffleEnabled]);
 
   const handleToggleFavorite = useCallback((song: Song) => {
     if (!song?.youtubeVideoId) {
@@ -365,6 +397,25 @@ function App() {
     setShuffleEnabled(true);
     setShuffleVersion((currentVersion) => currentVersion + 1);
   };
+
+  if (hasSearched && !showFavorites) {
+    return (
+      <main className="search-results-only" aria-label="Search results">
+        {!loading && !error && (
+          <MusicList
+            songs={songs}
+            activeIndex={activeIndex}
+            autoPlayIndex={autoPlayIndex}
+            onPlay={handlePlay}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={handleToggleFavorite}
+          />
+        )}
+      </main>
+    );
+  }
 
   return showFavorites ? (
     <Favorites

@@ -2,9 +2,10 @@
   min-height: 100svh;
 }
 
-.search-results-only .home-library {
+.search-results-only {
   min-height: 100svh;
-  padding-top: clamp(32px, 6vw, 72px);
+  padding: clamp(32px, 6vw, 72px) clamp(20px, 6vw, 96px);
+  background: #0d0d12;
 }
 
 .home-hero {
