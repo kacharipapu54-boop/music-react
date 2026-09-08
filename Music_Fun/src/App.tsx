@@ -193,6 +193,14 @@ function App() {
       return [];
     }
   });
+  const [favoriteLibrary, setFavoriteLibrary] = useState<Song[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("favoriteSongs") || "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
   const [activeSongId, setActiveSongId] = useState<string | null>(null);
   const [autoPlayIndex, setAutoPlayIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,6 +218,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem("favoriteSongIds", JSON.stringify(favoriteIds));
   }, [favoriteIds]);
+
+  useEffect(() => {
+    localStorage.setItem("favoriteSongs", JSON.stringify(favoriteLibrary));
+  }, [favoriteLibrary]);
 
   useEffect(() => {
     let cancelled = false;
@@ -234,6 +246,14 @@ function App() {
         const recommendations = uniqueSongs.slice(0, 20);
         setRecommendedSongs(recommendations);
         setSongs(recommendations);
+        setFavoriteLibrary((savedFavorites) =>
+          removeDuplicateSongs([
+            ...savedFavorites,
+            ...recommendations.filter((song) =>
+              favoriteIds.includes(song.youtubeVideoId)
+            ),
+          ])
+        );
       } catch (err) {
         if (!cancelled) {
           console.error(err);
@@ -279,9 +299,12 @@ function App() {
   }, [sleepMinutes]);
 
   const favoriteSongs = useMemo(() => {
-    const visibleFavorites = songs.filter((song) => favoriteIds.includes(song.youtubeVideoId));
+    const allKnownSongs = removeDuplicateSongs([...favoriteLibrary, ...songs]);
+    const visibleFavorites = allKnownSongs.filter((song) =>
+      favoriteIds.includes(song.youtubeVideoId)
+    );
     return shuffleEnabled ? shuffleArray(visibleFavorites) : visibleFavorites;
-  }, [songs, favoriteIds, shuffleEnabled, shuffleVersion]);
+  }, [favoriteLibrary, songs, favoriteIds, shuffleEnabled, shuffleVersion]);
 
   const currentSongs = showFavorites ? favoriteSongs : songs;
   const activeIndex = currentSongs.findIndex(
@@ -361,7 +384,11 @@ function App() {
     setActiveSongId(nextSong.youtubeVideoId);
     setAutoPlayIndex(nextIndex);
 
-    if (!relatedSongs.length && !showFavorites && !loadingMore) {
+    if (showFavorites) {
+      return;
+    }
+
+    if (!relatedSongs.length && !loadingMore) {
       try {
         setLoadingMore(true);
         const items = await searchYouTube(`${currentSong.artistName} songs`, 12);
@@ -392,6 +419,12 @@ function App() {
       currentFavorites.includes(song.youtubeVideoId)
         ? currentFavorites.filter((id) => id !== song.youtubeVideoId)
         : [...currentFavorites, song.youtubeVideoId]
+    );
+
+    setFavoriteLibrary((currentSongs) =>
+      currentSongs.some((savedSong) => savedSong.youtubeVideoId === song.youtubeVideoId)
+        ? currentSongs
+        : [...currentSongs, song]
     );
   }, []);
 
