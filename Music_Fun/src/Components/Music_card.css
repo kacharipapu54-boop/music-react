@@ -15,12 +15,73 @@
   box-shadow: 0 18px 36px rgba(25, 51, 47, 0.14);
 }
 
-.music-card > img {
+.cover-button {
+  position: relative;
+  display: block;
   width: 100%;
   aspect-ratio: 1;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
   border-radius: 10px;
-  object-fit: cover;
   background: #dce8df;
+  cursor: pointer;
+}
+
+.cover-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 180ms ease;
+}
+
+.cover-button:hover img {
+  transform: scale(1.04);
+}
+
+.cover-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, transparent 45%, rgba(13, 13, 18, 0.7));
+}
+
+.cover-play-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  padding-left: 3px;
+  border-radius: 50%;
+  color: #fff;
+  background: #ff3d81;
+  box-shadow: 0 8px 20px rgba(13, 13, 18, 0.3);
+  font-size: 1.1rem;
+}
+
+.active-player {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #18181f;
+}
+
+.active-player .youtube-player {
+  display: block;
+}
+
+.player-loading,
+.player-error {
+  margin: 0;
+  padding: 14px;
+  color: #60716b;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.player-error {
+  color: #b33f32;
 }
 
 .music-info h3 {
@@ -36,12 +97,64 @@
 }
 
 .music-info p {
-  margin-top: 6px;
+  margin: 6px 0 0;
   overflow: hidden;
   color: #60716b;
   font-size: 0.88rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.music-info {
+  position: relative;
+  min-width: 0;
+  padding-right: 34px;
+}
+
+.favorite-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #60716b;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.favorite-button:hover,
+.favorite-button.is-favorite {
+  color: #d9654e;
+}
+
+.track-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.track-control-button {
+  flex: 1;
+  border: 1px solid rgba(25, 51, 47, 0.16);
+  border-radius: 7px;
+  padding: 9px 10px;
+  color: #19332f;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.track-control-button:hover {
+  color: #fffdf9;
+  background: #19332f;
 }
 
 .youtube-player {
