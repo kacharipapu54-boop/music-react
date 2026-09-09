@@ -127,10 +127,12 @@ async function removeShortVideos(items: any[], apiKey: string) {
       ])
     );
 
-    return items.filter((item: any) => {
+    const filteredItems = items.filter((item: any) => {
       const duration = durations.get(item.id.videoId);
       return duration === undefined || duration > 60;
     });
+
+    return filteredItems.length ? filteredItems : items;
   } catch {
     return items;
   }
