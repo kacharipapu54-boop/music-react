@@ -227,8 +227,13 @@ function App() {
   const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem("favoriteSongIds") || "[]");
-      return Array.isArray(saved) ? saved : [];
+      const savedIds = JSON.parse(localStorage.getItem("favoriteSongIds") || "[]");
+      const savedSongs = JSON.parse(localStorage.getItem("favoriteSongs") || "[]");
+      const ids = Array.isArray(savedIds) ? savedIds : [];
+      const songIds = Array.isArray(savedSongs)
+        ? savedSongs.map((song) => song?.youtubeVideoId).filter(Boolean)
+        : [];
+      return [...new Set([...ids, ...songIds])];
     } catch {
       return [];
     }
@@ -464,14 +469,18 @@ function App() {
       return;
     }
 
-    setFavoriteIds((currentFavorites) =>
-      currentFavorites.includes(song.youtubeVideoId)
-        ? currentFavorites.filter((id) => id !== song.youtubeVideoId)
-        : [...currentFavorites, song.youtubeVideoId]
-    );
-
     setFavoriteLibrary((currentSongs) => {
-      const isFavorite = favoriteIds.includes(song.youtubeVideoId);
+      const isFavorite = currentSongs.some(
+        (savedSong) => savedSong.youtubeVideoId === song.youtubeVideoId
+      );
+
+      setFavoriteIds((currentFavorites) =>
+        isFavorite
+          ? currentFavorites.filter((id) => id !== song.youtubeVideoId)
+          : currentFavorites.includes(song.youtubeVideoId)
+            ? currentFavorites
+            : [...currentFavorites, song.youtubeVideoId]
+      );
 
       if (isFavorite) {
         return currentSongs.filter(
@@ -486,7 +495,7 @@ function App() {
         song,
       ];
     });
-  }, [favoriteIds]);
+  }, []);
 
   const handleSearchSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
