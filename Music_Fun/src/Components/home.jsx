@@ -306,7 +306,7 @@ function Home({
             SONG LIST
         ===================================== */}
 
-        {!error && children}
+        {!loading && !error && children}
 
       </section>
 
