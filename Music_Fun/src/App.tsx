@@ -228,7 +228,7 @@ function isDifferentSong(candidate: Song, currentSong: Song) {
 function App() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
-  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
+  const [storedFavoriteIds] = useState<string[]>(() => {
     try {
       const savedIds = JSON.parse(localStorage.getItem("favoriteSongIds") || "[]");
       const savedSongs = JSON.parse(localStorage.getItem("favoriteSongs") || "[]");
@@ -263,6 +263,11 @@ function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [sleepMinutes, setSleepMinutes] = useState(0);
   const [sleepRemaining, setSleepRemaining] = useState(0);
+
+  const favoriteIds = useMemo(
+    () => favoriteLibrary.map((song) => song.youtubeVideoId).filter(Boolean),
+    [favoriteLibrary]
+  );
 
   useEffect(() => {
     localStorage.setItem("favoriteSongIds", JSON.stringify(favoriteIds));
@@ -299,7 +304,7 @@ function App() {
           removeDuplicateSongs([
             ...savedFavorites,
             ...recommendations.filter((song) =>
-              favoriteIds.includes(song.youtubeVideoId)
+              storedFavoriteIds.includes(song.youtubeVideoId)
             ),
           ])
         );
@@ -320,7 +325,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [storedFavoriteIds]);
 
   useEffect(() => {
     if (sleepMinutes <= 0) {
@@ -349,11 +354,8 @@ function App() {
   }, [sleepMinutes]);
 
   const favoriteSongs = useMemo(() => {
-    const visibleFavorites = favoriteLibrary.filter((song) =>
-      favoriteIds.includes(song.youtubeVideoId)
-    );
-    return shuffleEnabled ? shuffleArray(visibleFavorites) : visibleFavorites;
-  }, [favoriteLibrary, favoriteIds, shuffleEnabled, shuffleVersion]);
+    return shuffleEnabled ? shuffleArray(favoriteLibrary) : favoriteLibrary;
+  }, [favoriteLibrary, shuffleEnabled, shuffleVersion]);
 
   const currentSongs = showFavorites ? favoriteSongs : songs;
   const activeIndex = currentSongs.findIndex(
@@ -475,14 +477,6 @@ function App() {
     setFavoriteLibrary((currentSongs) => {
       const isFavorite = currentSongs.some(
         (savedSong) => savedSong.youtubeVideoId === song.youtubeVideoId
-      );
-
-      setFavoriteIds((currentFavorites) =>
-        isFavorite
-          ? currentFavorites.filter((id) => id !== song.youtubeVideoId)
-          : currentFavorites.includes(song.youtubeVideoId)
-            ? currentFavorites
-            : [...currentFavorites, song.youtubeVideoId]
       );
 
       if (isFavorite) {
