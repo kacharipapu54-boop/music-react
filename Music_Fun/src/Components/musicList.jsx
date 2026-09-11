@@ -2,23 +2,15 @@ import Music_card from "./Music_card";
 import "./musicList.css";
 
 /**
- * @typedef {Object} MusicListSong
- * @property {string} youtubeVideoId
- * @property {string} [trackId]
- * @property {string} [trackName]
- * @property {string} [artistName]
- */
-
-/**
  * @param {Object} props
- * @param {MusicListSong[]} [props.songs]
+ * @param {Array} [props.songs]
  * @param {number | null} [props.activeIndex]
  * @param {(index: number) => void} [props.onPlay]
  * @param {() => void | Promise<void>} [props.onNext]
  * @param {() => void} [props.onPrevious]
  * @param {string[]} [props.favoriteIds]
- * @param {(song: MusicListSong) => void} [props.onToggleFavorite]
- * @param {boolean} [props.showActivePlayer]
+ * @param {(song: Object) => void} [props.onToggleFavorite]
+ * @param {boolean} [props.showPlayer]
  */
 function MusicList({
   songs = [],
@@ -28,7 +20,7 @@ function MusicList({
   onPrevious = () => undefined,
   favoriteIds = [],
   onToggleFavorite = (_song) => undefined,
-  showActivePlayer = true,
+  showPlayer = true,
 }) {
   if (!songs.length) {
     return (
@@ -52,7 +44,7 @@ function MusicList({
           onPrevious={onPrevious}
           isFavorite={favoriteIds.includes(song.youtubeVideoId)}
           onToggleFavorite={() => onToggleFavorite(song)}
-          showPlayer={showActivePlayer}
+          showPlayer={showPlayer}
         />
       ))}
     </div>

@@ -3,7 +3,7 @@ import Favorites from "./favorite.jsx";
 import Home from "./Components/home.jsx";
 import MusicList from "./Components/musicList.jsx";
 import { searchYouTube } from "./services/youtubeApi.js";
-import { getNextSong } from "../utils/recommendations.js";
+import { getNextSong } from "./utils/recommendations.js";
 
 type Song = {
   trackId: string;
@@ -195,19 +195,12 @@ function App() {
       return;
     }
 
-    if (shuffleEnabled && currentSongs.length > 1) {
-      const candidates = currentSongs.filter(
-        (song) => song.youtubeVideoId !== currentSong.youtubeVideoId
-      );
-      const next = candidates[Math.floor(Math.random() * candidates.length)];
-      if (next) {
-        setActiveSongId(next.youtubeVideoId);
-        setNowPlayingSong(next);
-        return;
-      }
-    }
-
-    const nextSong = getNextSong(currentSongs, currentSong);
+    const nextSong = getNextSong(
+      currentSongs,
+      currentSong,
+      [],
+      shuffleEnabled ? "shuffle" : "repeatAll"
+    );
 
     if (nextSong) {
       setActiveSongId(nextSong.youtubeVideoId);
@@ -228,11 +221,9 @@ function App() {
             [...currentSongs, ...newSongs],
             currentSong
           );
-
           setSongs((existing) =>
             removeDuplicateSongs([...existing, ...newSongs]).slice(0, 60)
           );
-
           if (nextSongFromMore) {
             setActiveSongId(nextSongFromMore.youtubeVideoId);
             setNowPlayingSong(nextSongFromMore);
@@ -303,11 +294,7 @@ function App() {
       onBack={() => setShowFavorites(false)}
       shuffleEnabled={shuffleEnabled}
       onToggleShuffle={handleShuffleFavorites}
-      showActivePlayer={false}
-      loading={loading}
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      onSearch={handleSearchSubmit}
+      showPlayer={false}
     />
   ) : hasSearched ? (
     <main className="search-results-only" aria-label="Search results">
@@ -324,12 +311,8 @@ function App() {
             placeholder="Search songs or artists..."
             aria-label="Search songs or artists"
           />
-          <button
-            type="submit"
-            disabled={!searchQuery.trim() || loading}
-            aria-busy={loading}
-          >
-            {loading ? "Searching..." : "Search"}
+          <button type="submit" disabled={!searchQuery.trim() || loading}>
+            {loading ? "Searching…" : "Search"}
           </button>
         </form>
 
@@ -364,7 +347,17 @@ function App() {
         </button>
       </div>
 
-      {loading && <p className="sr-only" role="status">Searching for songs...</p>}
+      {loading && (
+        <div className="results-skeleton" aria-label="Loading songs">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div className="skeleton-card" key={index}>
+              <span />
+              <b />
+              <i />
+            </div>
+          ))}
+        </div>
+      )}
 
       {!loading && error && (
         <div className="recommendation-error">
@@ -383,7 +376,7 @@ function App() {
           onPrevious={handlePrevious}
           favoriteIds={favoriteIds}
           onToggleFavorite={handleToggleFavorite}
-          showActivePlayer={false}
+          showPlayer={false}
         />
       )}
     </main>
@@ -412,7 +405,7 @@ function App() {
         onPrevious={handlePrevious}
         favoriteIds={favoriteIds}
         onToggleFavorite={handleToggleFavorite}
-        showActivePlayer={false}
+        showPlayer={false}
       />
     </Home>
   );

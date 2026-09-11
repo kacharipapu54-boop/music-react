@@ -45,6 +45,10 @@ export function getNextSong(songs, currentSong, recentlyPlayed = [], mode = 'rep
   const pool = fresh.length ? fresh : differentTitles
   if (!pool.length) return null
 
+  if (mode === 'shuffle') {
+    return pool[Math.floor(Math.random() * pool.length)]
+  }
+
   const sameArtist = pool.find((song) => sameText(song.artistName, currentSong.artistName))
   if (sameArtist) return sameArtist
 

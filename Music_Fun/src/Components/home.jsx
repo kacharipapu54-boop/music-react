@@ -84,9 +84,8 @@ function Home({
               className="search-button"
               type="submit"
               disabled={!searchQuery?.trim() || loading}
-              aria-busy={loading}
             >
-              {loading ? <span className="search-loading"><span aria-hidden="true" />Searching...</span> : "Search"}
+              {loading ? "Searching…" : "Search"}
             </button>
           </form>
 
