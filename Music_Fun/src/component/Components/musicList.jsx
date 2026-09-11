@@ -8,7 +8,7 @@ function MusicList({
   onNext = () => undefined,
   onPrevious = () => undefined,
   favoriteIds = [],
-  onToggleFavorite = () => undefined,
+  onToggleFavorite = (_song) => undefined,
   showActivePlayer = true,
 }) {
   if (!songs.length) {
