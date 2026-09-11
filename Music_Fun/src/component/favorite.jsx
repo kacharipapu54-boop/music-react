@@ -1,32 +1,10 @@
-/**
- * @typedef {{
- *   songs?: any[];
- *   activeIndex?: number | null;
- *   autoPlayIndex?: number | null;
- *   onPlay?: (index: number) => void;
- *   onNext?: () => void | Promise<void>;
- *   onPrevious?: () => void;
- *   favoriteIds?: string[];
- *   onToggleFavorite?: (song: any) => void;
- *   onBack?: () => void;
- *   shuffleEnabled?: boolean;
- *   onToggleShuffle?: () => void;
- *   backgroundPlayEnabled?: boolean;
- *   onToggleBackgroundPlay?: () => void;
- * }} FavoritesProps
- */
-
 import MusicList from "./Components/musicList.jsx";
 import "./favorite.css";
-import "./services/home.css";
+import "./Components/home.css";
 
-/**
- * @param {FavoritesProps} props
- */
 function Favorites({
   songs = [],
   activeIndex = null,
-  autoPlayIndex = null,
   onPlay = () => undefined,
   onNext = () => undefined,
   onPrevious = () => undefined,
@@ -35,15 +13,14 @@ function Favorites({
   onBack = () => undefined,
   shuffleEnabled = false,
   onToggleShuffle = () => undefined,
-  backgroundPlayEnabled = true,
-  onToggleBackgroundPlay = () => undefined,
+  showActivePlayer = true,
 }) {
   return (
     <main className="home-page favorites-page">
       <section className="home-library">
         <div className="favorites-toolbar">
           <button className="favorites-back" type="button" onClick={onBack}>
-            Back to songs
+            ← Back to songs
           </button>
 
           <div className="favorites-actions">
@@ -52,23 +29,13 @@ function Favorites({
               type="button"
               onClick={onToggleShuffle}
               aria-pressed={shuffleEnabled}
-              aria-label="Shuffle favorite songs"
             >
-              {shuffleEnabled ? "Shuffle favorites: On" : "Shuffle favorites"}
-            </button>
-
-            <button
-              type="button"
-              onClick={onToggleBackgroundPlay}
-              aria-pressed={backgroundPlayEnabled}
-              className="favorites-background"
-            >
-              {backgroundPlayEnabled ? "Background play: On" : "Background play: Off"}
+              {shuffleEnabled ? "Shuffle · On" : "Shuffle favorites"}
             </button>
           </div>
         </div>
 
-        <div className="home-library-heading">
+        <div className="home-library-heading favorites-heading">
           <div>
             <p className="home-section-label">Your collection</p>
             <h2>Your Favorites</h2>
@@ -80,18 +47,18 @@ function Favorites({
           <MusicList
             songs={songs}
             activeIndex={activeIndex}
-            autoPlayIndex={autoPlayIndex}
             onPlay={onPlay}
             onNext={onNext}
             onPrevious={onPrevious}
             favoriteIds={favoriteIds}
             onToggleFavorite={onToggleFavorite}
-            backgroundPlayEnabled={backgroundPlayEnabled}
+            showActivePlayer={showActivePlayer}
           />
         ) : (
           <div className="favorites-empty">
-            <h2>No favorites yet</h2>
-            <p>Tap the heart on a song to save it here.</p>
+            <div className="favorites-empty-icon">♥</div>
+            <h2>Your favorites are empty</h2>
+            <p>Tap the heart on any song to build your collection.</p>
           </div>
         )}
       </section>
@@ -99,4 +66,4 @@ function Favorites({
   );
 }
 
-export default Favorites
+export default Favorites;
