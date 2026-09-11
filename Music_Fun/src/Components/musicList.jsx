@@ -1,17 +1,19 @@
+/**
+ * @typedef {{
+ *   songs?: any[];
+ *   activeIndex?: number | null;
+ *   onPlay?: (index: number) => void;
+ *   onNext?: () => void | Promise<void>;
+ *   onPrevious?: () => void;
+ *   favoriteIds?: string[];
+ *   onToggleFavorite?: (song: any) => void;
+ *   showPlayer?: boolean;
+ * }} MusicListProps
+ */
 import Music_card from "./Music_card";
 import "./musicList.css";
 
-/**
- * @param {Object} props
- * @param {Array} [props.songs]
- * @param {number | null} [props.activeIndex]
- * @param {(index: number) => void} [props.onPlay]
- * @param {() => void | Promise<void>} [props.onNext]
- * @param {() => void} [props.onPrevious]
- * @param {string[]} [props.favoriteIds]
- * @param {(song: Object) => void} [props.onToggleFavorite]
- * @param {boolean} [props.showPlayer]
- */
+/** @param {MusicListProps} props */
 function MusicList({
   songs = [],
   activeIndex = null,

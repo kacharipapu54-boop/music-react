@@ -1,7 +1,25 @@
+/**
+ * @typedef {{
+ *   songs?: any[];
+ *   activeIndex?: number | null;
+ *   onPlay?: (index: number) => void;
+ *   onNext?: () => void | Promise<void>;
+ *   onPrevious?: () => void;
+ *   favoriteIds?: string[];
+ *   onToggleFavorite?: (song: any) => void;
+ *   onBack?: () => void;
+ *   shuffleEnabled?: boolean;
+ *   onToggleShuffle?: () => void;
+ *   showPlayer?: boolean;
+ * }} FavoritesProps
+ */
+
 import MusicList from "./Components/musicList.jsx";
 import "./favorite.css";
-import "./Components/home.css";
 
+/**
+ * @param {FavoritesProps} props
+ */
 function Favorites({
   songs = [],
   activeIndex = null,
@@ -9,59 +27,65 @@ function Favorites({
   onNext = () => undefined,
   onPrevious = () => undefined,
   favoriteIds = [],
-  onToggleFavorite = () => undefined,
-  showPlayer = true,
+  onToggleFavorite = (_song) => undefined,
   onBack = () => undefined,
   shuffleEnabled = false,
   onToggleShuffle = () => undefined,
+  showPlayer = true,
 }) {
   return (
-    <main className="home-page favorites-page">
-      <section className="home-library">
-        <div className="favorites-toolbar">
-          <button className="favorites-back" type="button" onClick={onBack}>
-            ← Back to songs
+    <main className="favorites-page">
+      <div className="favorites-container">
+
+        <div className="favorites-header">
+          <button
+            className="favorites-back"
+            type="button"
+            onClick={onBack}
+          >
+            ← Back
           </button>
 
-          <div className="favorites-actions">
-            <button
-              className="favorites-shuffle"
-              type="button"
-              onClick={onToggleShuffle}
-              aria-pressed={shuffleEnabled}
-            >
-              {shuffleEnabled ? "Shuffle · On" : "Shuffle favorites"}
-            </button>
-          </div>
-        </div>
-
-        <div className="home-library-heading favorites-heading">
           <div>
-            <p className="home-section-label">Your collection</p>
-            <h2>Your Favorites</h2>
+            <p className="favorites-eyebrow">
+              YOUR COLLECTION
+            </p>
+
+            <h1>Your Favorites</h1>
+
+            <p className="favorites-count">
+              {songs.length} saved song{songs.length === 1 ? "" : "s"}
+            </p>
           </div>
-          <span className="song-count">{favoriteIds.length} songs</span>
         </div>
 
-        {songs.length > 0 ? (
-          <MusicList
-            songs={songs}
-            activeIndex={activeIndex}
-            onPlay={onPlay}
-            onNext={onNext}
-            onPrevious={onPrevious}
-            favoriteIds={favoriteIds}
-            onToggleFavorite={onToggleFavorite}
-            showPlayer={showPlayer}
-          />
-        ) : (
-          <div className="favorites-empty">
-            <div className="favorites-empty-icon">♥</div>
-            <h2>Your favorites are empty</h2>
-            <p>Tap the heart on any song to build your collection.</p>
-          </div>
-        )}
-      </section>
+        <div className="favorites-actions">
+
+          <button
+            type="button"
+            className={`favorites-action ${
+              shuffleEnabled ? "active" : ""
+            }`}
+            onClick={onToggleShuffle}
+            aria-pressed={shuffleEnabled}
+          >
+            🔀 {shuffleEnabled ? "Shuffle On" : "Shuffle"}
+          </button>
+
+        </div>
+
+        <MusicList
+          songs={songs}
+          activeIndex={activeIndex}
+          onPlay={onPlay}
+          onNext={onNext}
+          onPrevious={onPrevious}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={onToggleFavorite}
+          showPlayer={showPlayer}
+        />
+
+      </div>
     </main>
   );
 }
