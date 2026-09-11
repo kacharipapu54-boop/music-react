@@ -9,7 +9,7 @@ import {
 const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 const SEARCH_URL = "https://www.googleapis.com/youtube/v3/search";
 const VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos";
-const MINIMUM_SONG_LENGTH = 120;
+const MINIMUM_SONG_LENGTH = 30;
 
 const BLOCKED_TERMS = [
   "#shorts",
@@ -38,10 +38,8 @@ function parseDuration(value) {
 
 function looksLikeMusic(item) {
   const title = String(item?.snippet?.title || "").toLowerCase();
-  const description = String(item?.snippet?.description || "").toLowerCase();
-  const text = `${title} ${description}`;
 
-  return !BLOCKED_TERMS.some((term) => text.includes(term));
+  return !BLOCKED_TERMS.some((term) => title.includes(term));
 }
 
 function uniqueSongs(songs) {
@@ -61,16 +59,14 @@ async function requestSongs(query, maxResults = 20) {
     );
   }
 
-  const searchParams = new URLSearchParams({
-    part: "snippet",
-    type: "video",
-    videoCategoryId: "10",
-    videoEmbeddable: "true",
-    videoSyndicated: "true",
-    maxResults: String(Math.min(maxResults, 50)),
-    q: `${query} official audio -shorts`,
-    key: API_KEY,
-  });
+    const searchParams = new URLSearchParams({
+      part: "snippet",
+      type: "video",
+      videoEmbeddable: "true",
+      maxResults: String(Math.min(maxResults, 50)),
+      q: query,
+      key: API_KEY,
+    });
 
   const searchResponse = await fetch(`${SEARCH_URL}?${searchParams}`);
 
@@ -135,8 +131,8 @@ export function searchYouTube(query, maxResults = 20) {
   const normalized = normalizeQuery(query);
   if (!normalized) return Promise.resolve([]);
 
-  const cached = getCachedSearch(normalized);
-  if (cached?.length) return Promise.resolve(cached);
+    const cached = getCachedSearch(normalized);
+    if (cached?.length) return Promise.resolve(cached);
 
   const pending = getPendingSearch(normalized);
   if (pending) return pending;

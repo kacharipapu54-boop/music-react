@@ -1,4 +1,4 @@
-const SEARCH_CACHE_KEY = "youtube_search_cache";
+const SEARCH_CACHE_KEY = "youtube_search_cache_v2";
 const CACHE_TTL = 12 * 60 * 60 * 1000;
 
 const memorySearchCache = new Map();

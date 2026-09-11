@@ -97,7 +97,7 @@ function App() {
         setLoading(true);
         setError("");
 
-        const results = await searchYouTube(INITIAL_QUERY, 20);
+        const results = await searchYouTube(INITIAL_QUERY, 50);
         if (cancelled) return;
 
         const unique = removeDuplicateSongs(results.map(normalizeSong)).slice(0, 20);
@@ -260,7 +260,7 @@ function App() {
       setHasSearched(true);
       setShowFavorites(false);
 
-      const results = await searchYouTube(query, 20);
+      const results = await searchYouTube(query, 50);
       setSongs(removeDuplicateSongs(results.map(normalizeSong)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to search YouTube.");
