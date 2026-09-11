@@ -1,6 +1,25 @@
 import Music_card from "./Music_card";
 import "./musicList.css";
 
+/**
+ * @typedef {Object} MusicListSong
+ * @property {string} youtubeVideoId
+ * @property {string} [trackId]
+ * @property {string} [trackName]
+ * @property {string} [artistName]
+ */
+
+/**
+ * @param {Object} props
+ * @param {MusicListSong[]} [props.songs]
+ * @param {number | null} [props.activeIndex]
+ * @param {(index: number) => void} [props.onPlay]
+ * @param {() => void | Promise<void>} [props.onNext]
+ * @param {() => void} [props.onPrevious]
+ * @param {string[]} [props.favoriteIds]
+ * @param {(song: MusicListSong) => void} [props.onToggleFavorite]
+ * @param {boolean} [props.showActivePlayer]
+ */
 function MusicList({
   songs = [],
   activeIndex = null,
