@@ -139,7 +139,7 @@
   backdrop-filter: blur(16px);
 }
 
-.search-input-wrapper:focus-within {
+.search-input-wrapper:has(input:focus-visible) {
   border-color: rgba(255, 159, 190, 0.62);
   box-shadow: 0 0 0 4px rgba(255, 61, 129, 0.08), 0 18px 45px rgba(0, 0, 0, 0.22);
 }
@@ -179,7 +179,11 @@
 }
 
 .search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 118px;
+  min-height: 58px;
   border: 0;
   border-radius: 16px;
   padding: 0 22px;
@@ -201,6 +205,23 @@
 .search-button:disabled {
   cursor: wait;
   opacity: .55;
+}
+
+.search-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.search-loading span {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.42);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: search-spin .7s linear infinite;
 }
 
 .hero-meta {
@@ -519,7 +540,7 @@
   font: inherit;
 }
 
-.search-results-form input:focus {
+.search-results-form input:focus-visible {
   border-color: rgba(255,159,190,.6);
   box-shadow: 0 0 0 3px rgba(255,61,129,.08);
 }
@@ -527,6 +548,9 @@
 .search-results-form button,
 .search-results-favorites,
 .search-results-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 11px;
@@ -560,11 +584,9 @@
 }
 
 .floating-player {
-  position: fixed;
-  right: 22px;
-  bottom: max(22px, env(safe-area-inset-bottom));
-  z-index: 100;
-  width: min(390px, calc(100vw - 32px));
+  position: relative;
+  width: min(390px, calc(100% - 32px));
+  margin: 0 auto 28px;
   padding: 8px;
   border: 1px solid rgba(255,159,190,.26);
   border-radius: 20px;
@@ -615,6 +637,10 @@
 @keyframes skeleton {
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
+}
+
+@keyframes search-spin {
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 900px) {
@@ -719,9 +745,8 @@
   }
 
   .floating-player {
-    right: 8px;
-    bottom: max(8px, env(safe-area-inset-bottom));
-    width: calc(100vw - 16px);
+    width: calc(100% - 16px);
+    margin-bottom: 16px;
     border-radius: 17px;
   }
 }

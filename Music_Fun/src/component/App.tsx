@@ -224,11 +224,19 @@ function App() {
         );
 
         if (newSongs.length) {
+          const nextSongFromMore = getNextSong(
+            [...currentSongs, ...newSongs],
+            currentSong
+          );
+
           setSongs((existing) =>
             removeDuplicateSongs([...existing, ...newSongs]).slice(0, 60)
           );
-          setActiveSongId(newSongs[0].youtubeVideoId);
-          setNowPlayingSong(newSongs[0]);
+
+          if (nextSongFromMore) {
+            setActiveSongId(nextSongFromMore.youtubeVideoId);
+            setNowPlayingSong(nextSongFromMore);
+          }
         }
       } finally {
         setLoadingMore(false);
@@ -296,6 +304,10 @@ function App() {
       shuffleEnabled={shuffleEnabled}
       onToggleShuffle={handleShuffleFavorites}
       showActivePlayer={false}
+      loading={loading}
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      onSearch={handleSearchSubmit}
     />
   ) : hasSearched ? (
     <main className="search-results-only" aria-label="Search results">
@@ -312,8 +324,12 @@ function App() {
             placeholder="Search songs or artists..."
             aria-label="Search songs or artists"
           />
-          <button type="submit" disabled={!searchQuery.trim() || loading}>
-            {loading ? "Searching…" : "Search"}
+          <button
+            type="submit"
+            disabled={!searchQuery.trim() || loading}
+            aria-busy={loading}
+          >
+            {loading ? "Searching..." : "Search"}
           </button>
         </form>
 
@@ -348,17 +364,7 @@ function App() {
         </button>
       </div>
 
-      {loading && (
-        <div className="results-skeleton" aria-label="Loading songs">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div className="skeleton-card" key={index}>
-              <span />
-              <b />
-              <i />
-            </div>
-          ))}
-        </div>
-      )}
+      {loading && <p className="sr-only" role="status">Searching for songs...</p>}
 
       {!loading && error && (
         <div className="recommendation-error">

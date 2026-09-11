@@ -14,11 +14,36 @@ function Favorites({
   shuffleEnabled = false,
   onToggleShuffle = () => undefined,
   showActivePlayer = true,
+  loading = false,
+  searchQuery = "",
+  setSearchQuery = () => undefined,
+  onSearch = () => undefined,
 }) {
   return (
     <main className="home-page favorites-page">
       <section className="home-library">
         <div className="favorites-toolbar">
+          <form className="search-results-form" onSubmit={onSearch}>
+            <label className="sr-only" htmlFor="favorites-search">
+              Search songs or artists
+            </label>
+            <input
+              id="favorites-search"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search songs or artists..."
+              aria-label="Search songs or artists"
+            />
+            <button
+              type="submit"
+              disabled={!searchQuery.trim() || loading}
+              aria-busy={loading}
+            >
+              {loading ? "Searching..." : "Search"}
+            </button>
+          </form>
+
           <button className="favorites-back" type="button" onClick={onBack}>
             ← Back to songs
           </button>
